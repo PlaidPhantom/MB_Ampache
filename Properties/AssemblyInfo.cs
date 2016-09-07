@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("TestCSharpDll")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("MB_Ampache")]
+[assembly: AssemblyDescription("MusicBee Ampache plugin")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("TestCSharpDll")]
-[assembly: AssemblyCopyright("Copyright ©  2010")]
+[assembly: AssemblyProduct("MB_Ampache")]
+[assembly: AssemblyCopyright("Copyright © 2015 Sam Shores")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("c1acdbd8-6b22-4807-bba3-d0237ccd74c1")]
+[assembly: Guid("707D25CE-F514-434D-BF7B-13A8FBC88051")]
 
 // Version information for an assembly consists of the following four values:
 //
