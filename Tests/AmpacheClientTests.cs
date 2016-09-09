@@ -8,12 +8,16 @@ namespace Tests
     [TestClass]
     public class AmpacheClientTests
     {
+        private string testAmpache = "";
+        private string testUsername = "";
+        private string testPassword = "";
+
         private AmpacheClient ampacheClient;
 
-        [ClassInitialize]
+        [TestInitialize]
         public void Setup()
         {
-            ampacheClient = new AmpacheClient(new Uri(""), "", "");
+            ampacheClient = new AmpacheClient(testAmpache, testUsername, testPassword);
         }
 
         [TestMethod]
@@ -21,16 +25,21 @@ namespace Tests
         {
             ManualResetEvent e = new ManualResetEvent(false);
 
+            HandshakeResult result = null;
+
             ampacheClient.HandshakeCompleted += (sender, eventArgs) =>
             {
-                var result = eventArgs.Result;
+                result = eventArgs.Result;
 
                 e.Set();
             };
 
             ampacheClient.StartHandshake();
 
-            e.WaitOne(5000);
+            e.WaitOne();
+
+            Assert.IsNotNull(result);
+            Assert.AreNotEqual(DateTimeOffset.MinValue, result.add);
         }
     }
 }

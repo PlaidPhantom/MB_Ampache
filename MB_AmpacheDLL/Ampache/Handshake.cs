@@ -8,6 +8,7 @@ namespace MusicBeePlugin.Ampache
         public HandshakeResult Result { get; set; }
     }
 
+    [XmlRoot("root")]
     public class HandshakeResult
     {
         public string auth { get; set; }

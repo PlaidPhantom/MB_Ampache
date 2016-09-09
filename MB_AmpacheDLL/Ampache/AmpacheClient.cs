@@ -1,28 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+using System.Xml.Serialization;
 
 namespace MusicBeePlugin.Ampache
 {
     public class AmpacheClient
     {
-        private WebClient apiClient { get; set; }
+        private string AmpacheUrl { get; set; }
         private string Username { get; set; }
         private string Password { get; set; }
 
-        public AmpacheClient(Uri url, string username, string password)
+        public AmpacheClient(string baseUrl, string username, string password)
         {
-            var builder = new UriBuilder(url);
-
-            builder.Path += "/server/xml.server.php";
-
-            apiClient = new WebClient { BaseAddress = builder.Uri.ToString() };
-
+            AmpacheUrl = baseUrl;
             Username = username;
             Password = password;
         }
@@ -53,19 +50,41 @@ namespace MusicBeePlugin.Ampache
                 ["auth"] = auth
             };
 
-            var url = new Uri(ToQueryString(parameters));
+            var url = new Uri(ToApiUrl(parameters));
 
-            apiClient.DownloadStringAsync(url);
+            var apiClient = new WebClient();
+
+            apiClient.DownloadDataCompleted += (sender, args) =>
+            {
+                var response = args.Result;
+
+                var serializer = new XmlSerializer(typeof(HandshakeResult));
+
+                var stream = new MemoryStream(response);
+                var result = (HandshakeResult)serializer.Deserialize(stream); // TODO deserialize
+
+                HandshakeCompleted(this, new HandshakeEventArgs { Result = result });
+            };
+
+            apiClient.DownloadDataAsync(url);
         }
 
-        private static string ToQueryString(Dictionary<string, string> dict)
+        private string ToApiUrl(Dictionary<string, string> dict)
         {
-            StringBuilder s = new StringBuilder("?");
+            StringBuilder s = new StringBuilder(AmpacheUrl);
+
+            if (!AmpacheUrl.EndsWith("/"))
+                s.Append("/");
+
+            s.Append("server/xml.server.php");
+
+            bool first = true;
 
             foreach (var pair in dict)
             {
-                if (s.Length > 1)
-                    s.Append("&");
+                s.Append(first ? "?" : "&");
+
+                first = false;
 
                 s.Append(HttpUtility.UrlEncode(pair.Key)).Append("=").Append(HttpUtility.UrlEncode(pair.Value));
             }
