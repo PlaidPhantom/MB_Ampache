@@ -39,7 +39,7 @@ namespace Tests
             e.WaitOne();
 
             Assert.IsNotNull(result);
-            Assert.AreNotEqual(DateTimeOffset.MinValue, result.add);
+            Assert.IsNotNull(result.auth);
         }
     }
 }
