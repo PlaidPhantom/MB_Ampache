@@ -79,7 +79,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Ampache\AmpacheClient.cs" />
-    <Compile Include="Ampache\HandshakeResult.cs" />
+    <Compile Include="Ampache\Handshake.cs" />
     <Compile Include="Ampache\Protocol.cs" />
     <Compile Include="MusicBeeInterface.cs" />
     <Compile Include="AmpachePlugin.cs" />

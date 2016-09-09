@@ -3,8 +3,12 @@ using System.Xml.Serialization;
 
 namespace MusicBeePlugin.Ampache
 {
-    [XmlElement(ElementName = "root")]
-    internal class HandshakeResult
+    public class HandshakeEventArgs : EventArgs
+    {
+        public HandshakeResult Result { get; set; }
+    }
+
+    public class HandshakeResult
     {
         public string auth { get; set; }
         public string version { get; set; }

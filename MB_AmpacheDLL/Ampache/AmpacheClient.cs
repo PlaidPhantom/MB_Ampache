@@ -27,7 +27,9 @@ namespace MusicBeePlugin.Ampache
             Password = password;
         }
 
-        public void Handshake()
+        public event EventHandler<HandshakeEventArgs> HandshakeCompleted;
+
+        public void StartHandshake()
         {
             var sha256 = SHA256.Create();
 
