@@ -69,5 +69,6 @@ namespace MusicBeePlugin.Ampache
             }
 
             return s.ToString();
+        }
     }
 }
