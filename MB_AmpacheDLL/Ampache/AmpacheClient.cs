@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -14,40 +15,41 @@ namespace MusicBeePlugin.Ampache
     public class AmpacheClient
     {
         private string AmpacheUrl { get; set; }
-        private string Username { get; set; }
-        private string Password { get; set; }
 
-        public AmpacheClient(string baseUrl, string username, string password)
+        private string AuthToken { get; set; }
+
+        public AmpacheClient(string baseUrl)
         {
             AmpacheUrl = baseUrl;
-            Username = username;
-            Password = password;
         }
 
         public event EventHandler<HandshakeEventArgs> HandshakeCompleted;
 
-        public void StartHandshake()
+        public void StartHandshake(string username, string password)
         {
             var sha256 = SHA256.Create();
 
             var timestamp = ((int)((DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds)).ToString();
 
-            var timebytes = Encoding.UTF8.GetBytes(timestamp);
-            var passbytes = Encoding.UTF8.GetBytes(Password);
+            var passbytes = Encoding.UTF8.GetBytes(password);
 
             var hash = sha256.ComputeHash(passbytes);
 
-            var authhash = sha256.ComputeHash(timebytes.Concat(passbytes).ToArray());
+            var hashstring = timestamp + string.Join("", hash.Select(b => b.ToString("x2")));
 
-            var auth = Convert.ToBase64String(authhash);
+            var hashhexbytes = Encoding.UTF8.GetBytes(hashstring);
+
+            var authhash = sha256.ComputeHash(hashhexbytes);
+
+            var hex = string.Join("", authhash.Select(b => b.ToString("x2")));
 
             var parameters = new Dictionary<string, string>
             {
                 ["action"] = "handshake",
-                ["user"] = Username,
+                ["user"] = username,
                 ["version"] = "350001",
                 ["timestamp"] = timestamp,
-                ["auth"] = auth
+                ["auth"] = hex
             };
 
             var url = new Uri(ToApiUrl(parameters));
@@ -56,14 +58,21 @@ namespace MusicBeePlugin.Ampache
 
             apiClient.DownloadDataCompleted += (sender, args) =>
             {
-                var response = args.Result;
+                var result = args.Result;
 
-                var serializer = new XmlSerializer(typeof(HandshakeResult));
+                Debug.Write(Encoding.UTF8.GetString(result));
 
-                var stream = new MemoryStream(response);
-                var result = (HandshakeResult)serializer.Deserialize(stream); // TODO deserialize
+                var serializer = new XmlSerializer(typeof(HandshakeResponse));
 
-                HandshakeCompleted(this, new HandshakeEventArgs { Result = result });
+                var stream = new MemoryStream(result);
+                var response = (HandshakeResponse)serializer.Deserialize(stream);
+
+                if (response.HasError)
+                    throw new AmpacheException(response.error);
+
+                this.AuthToken = response.auth;
+
+                HandshakeCompleted(this, new HandshakeEventArgs { Response = response });
             };
 
             apiClient.DownloadDataAsync(url);

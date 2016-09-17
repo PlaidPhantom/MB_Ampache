@@ -2,39 +2,41 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MusicBeePlugin.Ampache;
 using System.Threading;
+using System.Configuration;
 
 namespace Tests
 {
     [TestClass]
     public class AmpacheClientTests
     {
-        private string testAmpache = "";
-        private string testUsername = "";
-        private string testPassword = "";
-
         private AmpacheClient ampacheClient;
 
         [TestInitialize]
         public void Setup()
         {
-            ampacheClient = new AmpacheClient(testAmpache, testUsername, testPassword);
+            var testServer = ConfigurationManager.AppSettings["server"];
+
+            ampacheClient = new AmpacheClient(testServer);
         }
 
         [TestMethod]
-        public void Do_Handshake()
+        public void Can_Do_Handshake()
         {
+            var testUsername = ConfigurationManager.AppSettings["username"];
+            var testPassword = ConfigurationManager.AppSettings["password"];
+
             ManualResetEvent e = new ManualResetEvent(false);
 
-            HandshakeResult result = null;
+            HandshakeResponse result = null;
 
             ampacheClient.HandshakeCompleted += (sender, eventArgs) =>
             {
-                result = eventArgs.Result;
+                result = eventArgs.Response;
 
                 e.Set();
             };
 
-            ampacheClient.StartHandshake();
+            ampacheClient.StartHandshake(testUsername, testPassword);
 
             e.WaitOne();
 

@@ -5,11 +5,11 @@ namespace MusicBeePlugin.Ampache
 {
     public class HandshakeEventArgs : EventArgs
     {
-        public HandshakeResult Result { get; set; }
+        public HandshakeResponse Response { get; set; }
     }
 
     [XmlRoot("root")]
-    public class HandshakeResult
+    public class HandshakeResponse : AmpacheResponse
     {
         public string auth { get; set; }
         public string version { get; set; }
