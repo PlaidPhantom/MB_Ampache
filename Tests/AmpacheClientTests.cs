@@ -41,7 +41,7 @@ namespace Tests
             e.WaitOne();
 
             Assert.IsNotNull(result);
-            Assert.IsNotNull(result.auth);
+            Assert.IsNotNull(result.AuthToken);
         }
     }
 }

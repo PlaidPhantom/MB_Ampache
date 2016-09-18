@@ -1,18 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 
 namespace MusicBeePlugin.Ampache
 {
+    [DataContract(Name = "root", Namespace = "")]
     public class AmpacheResponse
     {
-        public string error { get; set; }
+        [DataMember(Name = "error", IsRequired = false, Order = 0)]
+        public string ErrorMessage { get; set; }
+
+        [IgnoreDataMember]
         public bool HasError
         {
             get
             {
-                return !string.IsNullOrEmpty(error);
+                return !string.IsNullOrEmpty(ErrorMessage);
             }
         }
     }

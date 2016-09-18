@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.Serialization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -62,15 +63,15 @@ namespace MusicBeePlugin.Ampache
 
                 Debug.Write(Encoding.UTF8.GetString(result));
 
-                var serializer = new XmlSerializer(typeof(HandshakeResponse));
+                var serializer = new DataContractSerializer(typeof(HandshakeResponse));
 
                 var stream = new MemoryStream(result);
-                var response = (HandshakeResponse)serializer.Deserialize(stream);
+                var response = (HandshakeResponse)serializer.ReadObject(stream);
 
                 if (response.HasError)
-                    throw new AmpacheException(response.error);
+                    throw new AmpacheException(response.ErrorMessage);
 
-                this.AuthToken = response.auth;
+                AuthToken = response.AuthToken;
 
                 HandshakeCompleted(this, new HandshakeEventArgs { Response = response });
             };
