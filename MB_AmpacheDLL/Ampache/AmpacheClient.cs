@@ -62,11 +62,16 @@ namespace MusicBeePlugin.Ampache
                 var result = args.Result;
 
                 Debug.Write(Encoding.UTF8.GetString(result));
+                
+                //var dtoAttributes = new XmlAttributes();
+                //dtoAttributes.
+                //var dtoOverride = new XmlAttributeOverrides();
+                //dtoOverride.Add(typeof(DateTimeOffset), dtoAttributes);
 
-                var serializer = new DataContractSerializer(typeof(HandshakeResponse));
+                var serializer = new XmlSerializer(typeof(HandshakeResponse));
 
                 var stream = new MemoryStream(result);
-                var response = (HandshakeResponse)serializer.ReadObject(stream);
+                var response = (HandshakeResponse)serializer.Deserialize(stream);
 
                 if (response.HasError)
                     throw new AmpacheException(response.ErrorMessage);

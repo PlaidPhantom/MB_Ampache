@@ -10,72 +10,76 @@ namespace MusicBeePlugin.Ampache
         public HandshakeResponse Response { get; set; }
     }
 
-    [DataContract(Name = "root", Namespace = "")]
+    [XmlRoot(ElementName = "root", Namespace = "")]
     public class HandshakeResponse : AmpacheResponse
     {
-        [DataMember(Name = "auth", Order = 1)]
+        [XmlElement("auth")]
         public string AuthToken { get; set; }
-        [IgnoreDataMember]
+        [XmlIgnore]
         public DateTimeOffset SessionExpiration { get; set; }
 
-        [DataMember(Name = "api", Order = 2)]
+        [XmlElement("api")]
+        [XmlElement("version")]
+        [XmlChoiceIdentifier("ApiVersionTag")]
         public string ApiVersion { get; set; }
 
-        [IgnoreDataMember]
+        [XmlIgnore]
         public DateTimeOffset LastUpdate { get; set; }
-        [IgnoreDataMember]
+        [XmlIgnore]
         public DateTimeOffset LastAdd { get; set; }
-        [IgnoreDataMember]
+        [XmlIgnore]
         public DateTimeOffset LastClean { get; set; }
 
-        [DataMember(Name = "songs", Order = 7)]
+        [XmlElement("songs")]
         public int TotalSongs { get; set; }
-        [DataMember(Name = "albums", Order = 8)]
+        [XmlElement("albums")]
         public int TotalAlbums { get; set; }
-        [DataMember(Name = "artists", Order = 9)]
+        [XmlElement("artists")]
         public int TotalArtists { get; set; }
-        [DataMember(Name = "tags", IsRequired = false, Order = 10)]
+        [XmlElement("tags")]
         public int TotalTags { get; set; }
-        [DataMember(Name = "playlists", Order = 10)]
+        [XmlElement("playlists")]
         public int TotalPlaylists { get; set; }
-        [DataMember(Name = "videos", Order = 11)]
+        [XmlElement("videos")]
         public int TotalVideos { get; set; }
-        [DataMember(Name = "catalogs", Order = 12)]
+        [XmlElement("catalogs")]
         public int TotalCatalogs { get; set; }
 
-        // the api docs still list this, but my Ampache doesn't return it
+        // Serialization Helpers
 
-        [DataMember(Name = "version", IsRequired = false, Order = 2)]
-        private string Version
+        [XmlIgnore]
+        public ApiVersionTags ApiVersionTag = ApiVersionTags.api;
+
+        [XmlType(IncludeInSchema = false)]
+        public enum ApiVersionTags
         {
-            get { return ApiVersion; }
-            set { ApiVersion = value; }
+            api, version
         }
 
         // DateTimeOffset helpers uggh
 
         private static string iso8601Format = "yyyy-MM-ddTHH:mm:sszzz";
 
-        [DataMember(Name = "session_expire", Order = 3)]
-        private string SessionExpirationStr
+        [XmlElement("session_expire")]
+        public string SessionExpirationStr
         {
             get { return SessionExpiration.ToString(iso8601Format); }
             set { SessionExpiration = DateTimeOffset.ParseExact(value, iso8601Format, CultureInfo.InvariantCulture); }
         }
-        [DataMember(Name = "update", Order = 4)]
-        private string LastUpdateStr
+        [XmlElement("update")]
+        public string LastUpdateStr
         {
             get { return LastUpdate.ToString(iso8601Format); }
             set { LastUpdate = DateTimeOffset.ParseExact(value, iso8601Format, CultureInfo.InvariantCulture); }
         }
-        [DataMember(Name = "add", Order = 5)]
-        private string LastAddStr
+        [XmlElement("add")]
+        public string LastAddStr
         {
             get { return LastAdd.ToString(iso8601Format); }
             set { LastAdd = DateTimeOffset.ParseExact(value, iso8601Format, CultureInfo.InvariantCulture); }
         }
-        [DataMember(Name = "clean", Order = 6)]
-        private string LastCleanStr
+        [XmlElement("clean")]
+        public string LastCleanStr
         {
             get { return LastClean.ToString(iso8601Format); }
             set { LastClean = DateTimeOffset.ParseExact(value, iso8601Format, CultureInfo.InvariantCulture); }
