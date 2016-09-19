@@ -30,10 +30,10 @@ namespace MusicBeePlugin.Ampache
 
         [DataMember(Name = "songs", Order = 7)]
         public int TotalSongs { get; set; }
-        [DataMember(Name = "artists", Order = 9)]
-        public int TotalArtists { get; set; }
         [DataMember(Name = "albums", Order = 8)]
         public int TotalAlbums { get; set; }
+        [DataMember(Name = "artists", Order = 9)]
+        public int TotalArtists { get; set; }
         [DataMember(Name = "tags", IsRequired = false, Order = 10)]
         public int TotalTags { get; set; }
         [DataMember(Name = "playlists", Order = 10)]
