@@ -1,5 +1,0 @@
-﻿enum Protocol
-{
-    HTTP,
-    HTTPS
-}

@@ -84,6 +84,11 @@ namespace MusicBeePlugin.Ampache
             apiClient.DownloadDataAsync(url);
         }
 
+        public void RefreshToken()
+        {
+
+        }
+
         private string ToApiUrl(Dictionary<string, string> dict)
         {
             StringBuilder s = new StringBuilder(AmpacheUrl);

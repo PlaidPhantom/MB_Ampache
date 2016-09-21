@@ -83,10 +83,10 @@
     <Compile Include="Ampache\AmpacheError.cs" />
     <Compile Include="Ampache\AmpacheResponse.cs" />
     <Compile Include="Ampache\HandshakeResponse.cs" />
-    <Compile Include="Ampache\Protocol.cs" />
     <Compile Include="MusicBeeInterface.cs" />
     <Compile Include="AmpachePlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Settings.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

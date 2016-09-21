@@ -3,6 +3,11 @@ using System.Runtime.InteropServices;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Collections.Generic;
+using MusicBeePlugin.Ampache;
+using System.IO;
+using System.Xml.Serialization;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace MusicBeePlugin
 {
@@ -11,12 +16,24 @@ namespace MusicBeePlugin
         private MusicBeeApiInterface mbApiInterface;
         private PluginInfo about = new PluginInfo();
 
+        private static string DefaultServer = "ampache.example.com";
+
+        private AmpacheClient ampache;
+
         private const string ConfigFileName = "mb_ampache.cfg";
+        private Task refreshTokenTask;
+        private CancellationTokenSource cancellationSignal;
+
+        private Settings CurrentSettings { get; set; }
 
         public PluginInfo Initialise(IntPtr apiInterfacePtr)
         {
             mbApiInterface = new MusicBeeApiInterface();
             mbApiInterface.Initialise(apiInterfacePtr);
+
+            LoadSettings();
+
+            StartApi();
 
             about.PluginInfoVersion = PluginInfoVersion;
             about.Name = "MB_Ampache";
@@ -36,11 +53,6 @@ namespace MusicBeePlugin
 
         public bool Configure(IntPtr panelHandle)
         {
-            // save any persistent settings in a sub-folder of this path
-            string dataPath = mbApiInterface.Setting_GetPersistentStoragePath();
-
-
-
             // panelHandle will only be set if you set about.ConfigurationPanelHeight to a non-zero value
             // keep in mind the panel width is scaled according to the font the user has selected
             // if about.ConfigurationPanelHeight is set to 0, you can display your own popup window
@@ -59,23 +71,103 @@ namespace MusicBeePlugin
             }
             return false;
         }
-       
+
+        public void LoadSettings()
+        {
+            // save any persistent settings in a sub-folder of this path
+            var dataPath = mbApiInterface.Setting_GetPersistentStoragePath();
+
+            var configFile = Path.Combine(dataPath, ConfigFileName);
+
+            if (!File.Exists(configFile))
+            {
+                CurrentSettings = new Settings
+                {
+                    Protocol = Protocol.HTTP,
+                    Server = DefaultServer,
+                    Port = 80,
+                    Username = "username",
+                    Password = "password"
+                };
+            }
+
+            using (var stream = File.OpenRead(configFile))
+            {
+                var serializer = new XmlSerializer(typeof(Settings));
+
+                CurrentSettings = (Settings)serializer.Deserialize(stream);
+            }
+
+            ampache = new AmpacheClient(CurrentSettings.MakeUrl());
+        }
+
         // called by MusicBee when the user clicks Apply or Save in the MusicBee Preferences screen.
         // its up to you to figure out whether anything has changed and needs updating
         public void SaveSettings()
         {
             // save any persistent settings in a sub-folder of this path
-            string dataPath = mbApiInterface.Setting_GetPersistentStoragePath();
+            var dataPath = mbApiInterface.Setting_GetPersistentStoragePath();
+
+            var configFile = Path.Combine(dataPath, ConfigFileName);
+
+            // TODO get settings from preferences UI & see if any changed
+
+            using(var stream = File.OpenWrite(configFile))
+            {
+                var serializer = new XmlSerializer(typeof(Settings));
+
+                serializer.Serialize(stream, CurrentSettings);
+            }
+        }
+
+        private void StartApi()
+        {
+            if (CurrentSettings.Server != DefaultServer)
+            {
+                ampache = new AmpacheClient(CurrentSettings.Server);
+
+                ampache.HandshakeCompleted += Ampache_HandshakeCompleted;
+                ampache.StartHandshake(CurrentSettings.Username, CurrentSettings.Password);            }
+            else
+                ampache = null;
+        }
+
+        private void Ampache_HandshakeCompleted(object sender, HandshakeEventArgs e)
+        {
+            var refreshTime = e.Response.SessionExpiration - DateTimeOffset.Now - TimeSpan.FromMinutes(1);
+
+            cancellationSignal = new CancellationTokenSource();
+
+            refreshTokenTask = Task.Factory.StartNew(() =>
+            {
+                cancellationSignal.Token.WaitHandle.WaitOne(refreshTime);
+
+                cancellationSignal.Token.ThrowIfCancellationRequested();
+
+                ampache.StartHandshake(CurrentSettings.Username, CurrentSettings.Password);
+            }, cancellationSignal.Token);
+        }
+
+        private void StopApi()
+        {
+            cancellationSignal.Cancel();
         }
 
         // MusicBee is closing the plugin (plugin is being disabled by user or MusicBee is shutting down)
         public void Close(PluginCloseReason reason)
         {
+            StopApi();
         }
 
         // uninstall this plugin - clean up any persisted files
         public void Uninstall()
         {
+            var dataPath = mbApiInterface.Setting_GetPersistentStoragePath();
+
+            var configFile = Path.Combine(dataPath, ConfigFileName);
+
+            if (File.Exists(configFile))
+                File.Delete(configFile);
         }
 
         // receive event notifications from MusicBee
