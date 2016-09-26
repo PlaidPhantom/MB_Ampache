@@ -15,28 +15,27 @@ namespace Tests
         public void Setup()
         {
             var testServer = ConfigurationManager.AppSettings["server"];
+            var testUsername = ConfigurationManager.AppSettings["username"];
+            var testPassword = ConfigurationManager.AppSettings["password"];
 
-            ampacheClient = new AmpacheClient(testServer);
+            ampacheClient = new AmpacheClient(testServer, testUsername, testPassword);
         }
 
         [TestMethod]
         public void Can_Do_Handshake()
         {
-            var testUsername = ConfigurationManager.AppSettings["username"];
-            var testPassword = ConfigurationManager.AppSettings["password"];
-
             ManualResetEvent e = new ManualResetEvent(false);
 
             HandshakeResponse result = null;
 
-            ampacheClient.HandshakeCompleted += (sender, eventArgs) =>
+            ampacheClient.Connected += (sender, eventArgs) =>
             {
                 result = eventArgs.Response;
 
                 e.Set();
             };
 
-            ampacheClient.StartHandshake(testUsername, testPassword);
+            ampacheClient.Connect();
 
             e.WaitOne();
 

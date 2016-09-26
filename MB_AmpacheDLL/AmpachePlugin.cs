@@ -21,10 +21,15 @@ namespace MusicBeePlugin
         private AmpacheClient ampache;
 
         private const string ConfigFileName = "mb_ampache.cfg";
-        private Task refreshTokenTask;
-        private CancellationTokenSource cancellationSignal;
 
         private Settings CurrentSettings { get; set; }
+
+        private SettingsControl SettingsControl { get; set; }
+
+        public Plugin()
+        {
+            SettingsControl = new SettingsControl();
+        }
 
         public PluginInfo Initialise(IntPtr apiInterfacePtr)
         {
@@ -47,7 +52,7 @@ namespace MusicBeePlugin
             about.MinInterfaceVersion = MinInterfaceVersion;
             about.MinApiRevision = MinApiRevision;
             about.ReceiveNotifications = (ReceiveNotificationFlags.PlayerEvents | ReceiveNotificationFlags.TagEvents);
-            about.ConfigurationPanelHeight = 100;   // height in pixels that musicbee should reserve in a panel for config settings. When set, a handle to an empty panel will be passed to the Configure function
+            about.ConfigurationPanelHeight = SettingsControl.Height;   // height in pixels that musicbee should reserve in a panel for config settings. When set, a handle to an empty panel will be passed to the Configure function
             return about;
         }
 
@@ -58,17 +63,11 @@ namespace MusicBeePlugin
             // if about.ConfigurationPanelHeight is set to 0, you can display your own popup window
             if (panelHandle != IntPtr.Zero)
             {
-                Panel configPanel = (Panel)Panel.FromHandle(panelHandle);
-                Label prompt = new Label();
-                prompt.AutoSize = true;
-                prompt.Location = new Point(0, 0);
-                prompt.Text = "prompt:";
+                Panel configPanel = (Panel)Control.FromHandle(panelHandle);
 
-                TextBox textBox = new TextBox();
-                textBox.Bounds = new Rectangle(60, 0, 100, textBox.Height);
-
-                configPanel.Controls.AddRange(new Control[] { prompt, textBox });
+                configPanel.Controls.Add(SettingsControl);
             }
+
             return false;
         }
 
@@ -98,7 +97,7 @@ namespace MusicBeePlugin
                 CurrentSettings = (Settings)serializer.Deserialize(stream);
             }
 
-            ampache = new AmpacheClient(CurrentSettings.MakeUrl());
+            ampache = new AmpacheClient(CurrentSettings.MakeUrl(), CurrentSettings.Username, CurrentSettings.Password);
         }
 
         // called by MusicBee when the user clicks Apply or Save in the MusicBee Preferences screen.
@@ -124,33 +123,21 @@ namespace MusicBeePlugin
         {
             if (CurrentSettings.Server != DefaultServer)
             {
-                ampache = new AmpacheClient(CurrentSettings.Server);
+                ampache = new AmpacheClient(CurrentSettings.MakeUrl(), CurrentSettings.Username, CurrentSettings.Password);
 
-                ampache.HandshakeCompleted += Ampache_HandshakeCompleted;
-                ampache.StartHandshake(CurrentSettings.Username, CurrentSettings.Password);            }
+                ampache.Connected += Ampache_Connected;
+                ampache.Connect();
+            }
             else
                 ampache = null;
         }
-
-        private void Ampache_HandshakeCompleted(object sender, HandshakeEventArgs e)
-        {
-            var refreshTime = e.Response.SessionExpiration - DateTimeOffset.Now - TimeSpan.FromMinutes(1);
-
-            cancellationSignal = new CancellationTokenSource();
-
-            refreshTokenTask = Task.Factory.StartNew(() =>
-            {
-                cancellationSignal.Token.WaitHandle.WaitOne(refreshTime);
-
-                cancellationSignal.Token.ThrowIfCancellationRequested();
-
-                ampache.StartHandshake(CurrentSettings.Username, CurrentSettings.Password);
-            }, cancellationSignal.Token);
-        }
-
         private void StopApi()
         {
-            cancellationSignal.Cancel();
+            ampache.Disconnect();
+        }
+
+        private void Ampache_Connected(object sender, AmpacheConnectedEventArgs e)
+        {
         }
 
         // MusicBee is closing the plugin (plugin is being disabled by user or MusicBee is shutting down)

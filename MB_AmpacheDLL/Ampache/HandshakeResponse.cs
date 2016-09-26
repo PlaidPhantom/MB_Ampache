@@ -5,11 +5,6 @@ using System.Xml.Serialization;
 
 namespace MusicBeePlugin.Ampache
 {
-    public class HandshakeEventArgs : EventArgs
-    {
-        public HandshakeResponse Response { get; set; }
-    }
-
     [XmlRoot(ElementName = "root", Namespace = "")]
     public class HandshakeResponse : AmpacheResponse
     {

@@ -7,6 +7,7 @@ using System.Net;
 using System.Runtime.Serialization;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Xml.Serialization;
@@ -16,23 +17,43 @@ namespace MusicBeePlugin.Ampache
     public class AmpacheClient
     {
         private string AmpacheUrl { get; set; }
+        private string Username { get; set; }
+        private string Password { get; set; }
 
         private string AuthToken { get; set; }
 
-        public AmpacheClient(string baseUrl)
+        private Task refreshTokenTask;
+        private CancellationTokenSource cancellationSignal;
+
+        public DateTimeOffset LastUpdate { get; set; }
+        public DateTimeOffset LastAdd { get; set; }
+        public DateTimeOffset LastClean { get; set; }
+
+        public int TotalSongs { get; set; }
+        public int TotalAlbums { get; set; }
+        public int TotalArtists { get; set; }
+        public int TotalTags { get; set; }
+        public int TotalPlaylists { get; set; }
+        public int TotalVideos { get; set; }
+        public int TotalCatalogs { get; set; }
+
+
+        public AmpacheClient(string baseUrl, string username, string password)
         {
             AmpacheUrl = baseUrl;
+            Username = username;
+            Password = password;
         }
 
-        public event EventHandler<HandshakeEventArgs> HandshakeCompleted;
+        public event EventHandler<AmpacheConnectedEventArgs> Connected;
 
-        public void StartHandshake(string username, string password)
+        public void Connect()
         {
             var sha256 = SHA256.Create();
 
             var timestamp = ((int)((DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds)).ToString();
 
-            var passbytes = Encoding.UTF8.GetBytes(password);
+            var passbytes = Encoding.UTF8.GetBytes(Password);
 
             var hash = sha256.ComputeHash(passbytes);
 
@@ -47,7 +68,7 @@ namespace MusicBeePlugin.Ampache
             var parameters = new Dictionary<string, string>
             {
                 ["action"] = "handshake",
-                ["user"] = username,
+                ["user"] = Username,
                 ["version"] = "350001",
                 ["timestamp"] = timestamp,
                 ["auth"] = hex
@@ -63,11 +84,6 @@ namespace MusicBeePlugin.Ampache
 
                 Debug.Write(Encoding.UTF8.GetString(result));
                 
-                //var dtoAttributes = new XmlAttributes();
-                //dtoAttributes.
-                //var dtoOverride = new XmlAttributeOverrides();
-                //dtoOverride.Add(typeof(DateTimeOffset), dtoAttributes);
-
                 var serializer = new XmlSerializer(typeof(HandshakeResponse));
 
                 var stream = new MemoryStream(result);
@@ -77,16 +93,49 @@ namespace MusicBeePlugin.Ampache
                     throw new AmpacheException(response.ErrorMessage);
 
                 AuthToken = response.AuthToken;
+                LastAdd = response.LastAdd;
+                LastClean = response.LastClean;
+                LastUpdate = response.LastUpdate;
+                TotalAlbums = response.TotalAlbums;
+                TotalArtists = response.TotalArtists;
+                TotalCatalogs = response.TotalCatalogs;
+                TotalPlaylists = response.TotalPlaylists;
+                TotalSongs = response.TotalSongs;
+                TotalTags = response.TotalTags;
+                TotalVideos = response.TotalVideos;
 
-                HandshakeCompleted(this, new HandshakeEventArgs { Response = response });
+                var refreshTime = response.SessionExpiration - DateTimeOffset.Now - TimeSpan.FromMinutes(1);
+
+                cancellationSignal = new CancellationTokenSource();
+
+                refreshTokenTask = Task.Factory.StartNew(() =>
+                {
+                    cancellationSignal.Token.WaitHandle.WaitOne(refreshTime);
+
+                    cancellationSignal.Token.ThrowIfCancellationRequested();
+
+                    Connect();
+                }, cancellationSignal.Token);
+
+                Connected(this, new AmpacheConnectedEventArgs { Response = response });
             };
 
             apiClient.DownloadDataAsync(url);
         }
 
-        public void RefreshToken()
+        public void Disconnect()
         {
+            cancellationSignal.Cancel();
 
+            try
+            {
+                refreshTokenTask.Wait();
+            }
+            catch(AggregateException e)
+            {
+                if (e.InnerExceptions.Any(ex => ex.GetType() != typeof(TaskCanceledException)))
+                    throw e;
+            }
         }
 
         private string ToApiUrl(Dictionary<string, string> dict)
