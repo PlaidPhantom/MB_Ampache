@@ -65,6 +65,12 @@ namespace MusicBeePlugin
             {
                 Panel configPanel = (Panel)Control.FromHandle(panelHandle);
 
+                SettingsControl.Protocol = CurrentSettings.Protocol;
+                SettingsControl.Server = CurrentSettings.Server;
+                SettingsControl.Port = CurrentSettings.Port;
+                SettingsControl.Username = CurrentSettings.Username;
+                SettingsControl.Password = "";
+
                 configPanel.Controls.Add(SettingsControl);
             }
 
@@ -86,7 +92,7 @@ namespace MusicBeePlugin
                     Server = DefaultServer,
                     Port = 80,
                     Username = "username",
-                    Password = "password"
+                    PasswordHash = "password"
                 };
             }
 
@@ -97,19 +103,31 @@ namespace MusicBeePlugin
                 CurrentSettings = (Settings)serializer.Deserialize(stream);
             }
 
-            ampache = new AmpacheClient(CurrentSettings.MakeUrl(), CurrentSettings.Username, CurrentSettings.Password);
+            ampache = new AmpacheClient(CurrentSettings.MakeUrl(), CurrentSettings.Username, CurrentSettings.PasswordHash);
         }
 
         // called by MusicBee when the user clicks Apply or Save in the MusicBee Preferences screen.
         // its up to you to figure out whether anything has changed and needs updating
         public void SaveSettings()
         {
+            var newSettings = new Settings
+            {
+                Protocol = SettingsControl.Protocol,
+                Server = SettingsControl.Server,
+                Port = SettingsControl.Port,
+                Username = SettingsControl.Username,
+                PasswordHash = AmpacheClient.PreHash(SettingsControl.Password)
+            };
+
+            if (newSettings == CurrentSettings)
+                return;
+
+            StopApi();
+
             // save any persistent settings in a sub-folder of this path
             var dataPath = mbApiInterface.Setting_GetPersistentStoragePath();
 
             var configFile = Path.Combine(dataPath, ConfigFileName);
-
-            // TODO get settings from preferences UI & see if any changed
 
             using(var stream = File.OpenWrite(configFile))
             {
@@ -117,13 +135,17 @@ namespace MusicBeePlugin
 
                 serializer.Serialize(stream, CurrentSettings);
             }
+
+            CurrentSettings = newSettings;
+
+            StartApi();
         }
 
         private void StartApi()
         {
             if (CurrentSettings.Server != DefaultServer)
             {
-                ampache = new AmpacheClient(CurrentSettings.MakeUrl(), CurrentSettings.Username, CurrentSettings.Password);
+                ampache = new AmpacheClient(CurrentSettings.MakeUrl(), CurrentSettings.Username, CurrentSettings.PasswordHash);
 
                 ampache.Connected += Ampache_Connected;
                 ampache.Connect();

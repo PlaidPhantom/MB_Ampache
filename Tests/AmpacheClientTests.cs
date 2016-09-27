@@ -18,7 +18,7 @@ namespace Tests
             var testUsername = ConfigurationManager.AppSettings["username"];
             var testPassword = ConfigurationManager.AppSettings["password"];
 
-            ampacheClient = new AmpacheClient(testServer, testUsername, testPassword);
+            ampacheClient = new AmpacheClient(testServer, testUsername, AmpacheClient.PreHash(testPassword));
         }
 
         [TestMethod]

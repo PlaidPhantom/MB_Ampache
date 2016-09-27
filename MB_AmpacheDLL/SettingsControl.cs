@@ -11,28 +11,55 @@ namespace MusicBeePlugin
 {
     public partial class SettingsControl : UserControl
     {
+        public Protocol Protocol
+        {
+            get { return (Protocol)Enum.Parse(typeof(Protocol), (string)ProtocolSelect.SelectedValue); }
+            set { ProtocolSelect.SelectedValue = Enum.GetName(typeof(Protocol), value); }
+        }
+
+        public string Server
+        {
+            get { return ServerField.Text; }
+            set { ServerField.Text = value; }
+        }
+
+        public int Port
+        {
+            get { return (int)PortSpinner.Value; }
+            set { PortSpinner.Value = value; }
+        }
+
+        public string Username
+        {
+            get { return UsernameField.Text; }
+            set { UsernameField.Text = value; }
+        }
+
+        public string Password
+        {
+            get { return PasswordField.Text; }
+            set { PasswordField.Text = value; }
+        }
+
         public SettingsControl()
         {
             InitializeComponent();
+            ProtocolSelect.Items.Clear();
+            ProtocolSelect.Items.AddRange(Enum.GetNames(typeof(Protocol)));
         }
 
-        private void tableLayoutPanel1_Paint(object sender, PaintEventArgs e)
+        private void ProtocolSelect_SelectedIndexChanged(object sender, EventArgs e)
         {
-
-        }
-
-        private void Protocol_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            switch((string)Protocol.SelectedValue)
+            switch((string)ProtocolSelect.SelectedValue)
             {
                 case "HTTP":
-                    Port.Value = 80;
+                    PortSpinner.Value = 80;
                     break;
                 case "HTTPS":
-                    Port.Value = 443;
+                    PortSpinner.Value = 443;
                     break;
                 default:
-                    Port.Value = 8080;
+                    PortSpinner.Value = 8080;
                     break;
             }
         }

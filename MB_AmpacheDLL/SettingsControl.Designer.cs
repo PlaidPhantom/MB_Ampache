@@ -30,17 +30,17 @@
         {
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.label1 = new System.Windows.Forms.Label();
-            this.Protocol = new System.Windows.Forms.ListBox();
-            this.Server = new System.Windows.Forms.TextBox();
+            this.ProtocolSelect = new System.Windows.Forms.ListBox();
+            this.ServerField = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
-            this.Port = new System.Windows.Forms.NumericUpDown();
+            this.PortSpinner = new System.Windows.Forms.NumericUpDown();
             this.label4 = new System.Windows.Forms.Label();
-            this.Username = new System.Windows.Forms.TextBox();
+            this.UsernameField = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
-            this.Password = new System.Windows.Forms.TextBox();
+            this.PasswordField = new System.Windows.Forms.TextBox();
             this.tableLayoutPanel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.Port)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PortSpinner)).BeginInit();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -49,15 +49,15 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel1.Controls.Add(this.label1, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.Protocol, 1, 0);
-            this.tableLayoutPanel1.Controls.Add(this.Server, 1, 1);
+            this.tableLayoutPanel1.Controls.Add(this.ProtocolSelect, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.ServerField, 1, 1);
             this.tableLayoutPanel1.Controls.Add(this.label2, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.label3, 0, 2);
-            this.tableLayoutPanel1.Controls.Add(this.Port, 1, 2);
+            this.tableLayoutPanel1.Controls.Add(this.PortSpinner, 1, 2);
             this.tableLayoutPanel1.Controls.Add(this.label4, 0, 3);
-            this.tableLayoutPanel1.Controls.Add(this.Username, 1, 3);
+            this.tableLayoutPanel1.Controls.Add(this.UsernameField, 1, 3);
             this.tableLayoutPanel1.Controls.Add(this.label5, 0, 4);
-            this.tableLayoutPanel1.Controls.Add(this.Password, 1, 4);
+            this.tableLayoutPanel1.Controls.Add(this.PasswordField, 1, 4);
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 5;
@@ -68,7 +68,6 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(617, 228);
             this.tableLayoutPanel1.TabIndex = 1;
-            this.tableLayoutPanel1.Paint += new System.Windows.Forms.PaintEventHandler(this.tableLayoutPanel1_Paint);
             // 
             // label1
             // 
@@ -80,28 +79,28 @@
             this.label1.TabIndex = 0;
             this.label1.Text = "Protocol";
             // 
-            // Protocol
+            // ProtocolSelect
             // 
-            this.Protocol.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.Protocol.FormattingEnabled = true;
-            this.Protocol.ItemHeight = 24;
-            this.Protocol.Items.AddRange(new object[] {
-            "HTTP",
-            "HTTPS"});
-            this.Protocol.Location = new System.Drawing.Point(111, 8);
-            this.Protocol.Name = "Protocol";
-            this.Protocol.Size = new System.Drawing.Size(120, 28);
-            this.Protocol.TabIndex = 1;
-            this.Protocol.SelectedIndexChanged += new System.EventHandler(this.Protocol_SelectedIndexChanged);
+            this.ProtocolSelect.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.ProtocolSelect.FormattingEnabled = true;
+            this.ProtocolSelect.ItemHeight = 24;
+            this.ProtocolSelect.Items.AddRange(new object[] {
+            "HTTP"});
+            this.ProtocolSelect.Location = new System.Drawing.Point(111, 8);
+            this.ProtocolSelect.Name = "ProtocolSelect";
+            this.ProtocolSelect.Size = new System.Drawing.Size(120, 28);
+            this.ProtocolSelect.TabIndex = 1;
+            this.ProtocolSelect.SelectedIndexChanged += new System.EventHandler(this.ProtocolSelect_SelectedIndexChanged);
             // 
-            // Server
+            // ServerField
             // 
-            this.Server.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.Server.Location = new System.Drawing.Point(111, 53);
-            this.Server.Name = "Server";
-            this.Server.Size = new System.Drawing.Size(503, 29);
-            this.Server.TabIndex = 2;
-            this.Server.Text = "server.example.com/ampache/";
+            this.ServerField.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.ServerField.ForeColor = System.Drawing.SystemColors.WindowText;
+            this.ServerField.Location = new System.Drawing.Point(111, 53);
+            this.ServerField.Name = "ServerField";
+            this.ServerField.Size = new System.Drawing.Size(503, 29);
+            this.ServerField.TabIndex = 2;
+            this.ServerField.Text = "server.example.com/ampache/";
             // 
             // label2
             // 
@@ -123,19 +122,19 @@
             this.label3.TabIndex = 4;
             this.label3.Text = "Port";
             // 
-            // Port
+            // PortSpinner
             // 
-            this.Port.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.Port.Location = new System.Drawing.Point(111, 98);
-            this.Port.Maximum = new decimal(new int[] {
+            this.PortSpinner.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.PortSpinner.Location = new System.Drawing.Point(111, 98);
+            this.PortSpinner.Maximum = new decimal(new int[] {
             65535,
             0,
             0,
             0});
-            this.Port.Name = "Port";
-            this.Port.Size = new System.Drawing.Size(120, 29);
-            this.Port.TabIndex = 5;
-            this.Port.Value = new decimal(new int[] {
+            this.PortSpinner.Name = "PortSpinner";
+            this.PortSpinner.Size = new System.Drawing.Size(120, 29);
+            this.PortSpinner.TabIndex = 5;
+            this.PortSpinner.Value = new decimal(new int[] {
             8080,
             0,
             0,
@@ -151,14 +150,14 @@
             this.label4.TabIndex = 6;
             this.label4.Text = "Username";
             // 
-            // Username
+            // UsernameField
             // 
-            this.Username.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.Username.Location = new System.Drawing.Point(111, 143);
-            this.Username.Name = "Username";
-            this.Username.Size = new System.Drawing.Size(503, 29);
-            this.Username.TabIndex = 7;
-            this.Username.Text = "username";
+            this.UsernameField.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.UsernameField.Location = new System.Drawing.Point(111, 143);
+            this.UsernameField.Name = "UsernameField";
+            this.UsernameField.Size = new System.Drawing.Size(503, 29);
+            this.UsernameField.TabIndex = 7;
+            this.UsernameField.Text = "username";
             // 
             // label5
             // 
@@ -170,15 +169,15 @@
             this.label5.TabIndex = 8;
             this.label5.Text = "Password";
             // 
-            // Password
+            // PasswordField
             // 
-            this.Password.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.Password.Location = new System.Drawing.Point(111, 189);
-            this.Password.Name = "Password";
-            this.Password.PasswordChar = '*';
-            this.Password.Size = new System.Drawing.Size(503, 29);
-            this.Password.TabIndex = 9;
-            this.Password.Text = "password";
+            this.PasswordField.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.PasswordField.Location = new System.Drawing.Point(111, 189);
+            this.PasswordField.Name = "PasswordField";
+            this.PasswordField.PasswordChar = '*';
+            this.PasswordField.Size = new System.Drawing.Size(503, 29);
+            this.PasswordField.TabIndex = 9;
+            this.PasswordField.Text = "password";
             // 
             // SettingsControl
             // 
@@ -189,7 +188,7 @@
             this.Size = new System.Drawing.Size(620, 233);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.Port)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PortSpinner)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -198,14 +197,14 @@
 
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.ListBox Protocol;
-        private System.Windows.Forms.TextBox Server;
+        private System.Windows.Forms.ListBox ProtocolSelect;
+        private System.Windows.Forms.TextBox ServerField;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.NumericUpDown Port;
+        private System.Windows.Forms.NumericUpDown PortSpinner;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.TextBox Username;
+        private System.Windows.Forms.TextBox UsernameField;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.TextBox Password;
+        private System.Windows.Forms.TextBox PasswordField;
     }
 }

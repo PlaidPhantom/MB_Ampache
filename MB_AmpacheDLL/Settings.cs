@@ -14,7 +14,7 @@ namespace MusicBeePlugin
         public int Port { get; set; }
 
         public string Username { get; set; }
-        public string Password { get; set; }
+        public string PasswordHash { get; set; }
 
         public string MakeUrl()
         {
@@ -34,9 +34,23 @@ namespace MusicBeePlugin
 
             return builder.Uri.ToString();
         }
+
+        public static bool operator ==(Settings lhs, Settings rhs)
+        {
+            return lhs.Protocol == rhs.Protocol
+                && lhs.Server == rhs.Server
+                && lhs.Port == rhs.Port
+                && lhs.Username == rhs.Username
+                && lhs.PasswordHash == rhs.PasswordHash;
+        }
+
+        public static bool operator !=(Settings lhs, Settings rhs)
+        {
+            return !(lhs == rhs);
+        }
     }
 
-    enum Protocol
+    public enum Protocol
     {
         HTTP,
         HTTPS

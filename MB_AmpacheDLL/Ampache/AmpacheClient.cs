@@ -18,7 +18,7 @@ namespace MusicBeePlugin.Ampache
     {
         private string AmpacheUrl { get; set; }
         private string Username { get; set; }
-        private string Password { get; set; }
+        private string PasswordHash { get; set; }
 
         private string AuthToken { get; set; }
 
@@ -38,11 +38,22 @@ namespace MusicBeePlugin.Ampache
         public int TotalCatalogs { get; set; }
 
 
-        public AmpacheClient(string baseUrl, string username, string password)
+        public AmpacheClient(string baseUrl, string username, string passwordHash)
         {
             AmpacheUrl = baseUrl;
             Username = username;
-            Password = password;
+            PasswordHash = passwordHash;
+        }
+
+        public static string PreHash(string password)
+        {
+            var sha256 = SHA256.Create();
+
+            var passbytes = Encoding.UTF8.GetBytes(password);
+
+            var hash = sha256.ComputeHash(passbytes);
+
+            return string.Join("", hash.Select(b => b.ToString("x2")));
         }
 
         public event EventHandler<AmpacheConnectedEventArgs> Connected;
@@ -53,11 +64,7 @@ namespace MusicBeePlugin.Ampache
 
             var timestamp = ((int)((DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds)).ToString();
 
-            var passbytes = Encoding.UTF8.GetBytes(Password);
-
-            var hash = sha256.ComputeHash(passbytes);
-
-            var hashstring = timestamp + string.Join("", hash.Select(b => b.ToString("x2")));
+            var hashstring = timestamp + PasswordHash;
 
             var hashhexbytes = Encoding.UTF8.GetBytes(hashstring);
 
