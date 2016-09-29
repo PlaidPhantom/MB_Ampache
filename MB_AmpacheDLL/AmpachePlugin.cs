@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Runtime.InteropServices;
-using System.Drawing;
 using System.Windows.Forms;
-using System.Collections.Generic;
 using MusicBeePlugin.Ampache;
 using System.IO;
 using System.Xml.Serialization;
-using System.Threading.Tasks;
-using System.Threading;
 
 namespace MusicBeePlugin
 {

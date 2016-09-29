@@ -79,11 +79,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Ampache\Album.cs" />
     <Compile Include="Ampache\AmpacheClient.cs" />
     <Compile Include="Ampache\AmpacheConnectedEventArgs.cs" />
     <Compile Include="Ampache\AmpacheError.cs" />
     <Compile Include="Ampache\AmpacheResponse.cs" />
+    <Compile Include="Ampache\Artist.cs" />
     <Compile Include="Ampache\HandshakeResponse.cs" />
+    <Compile Include="Ampache\Playlist.cs" />
+    <Compile Include="Ampache\Song.cs" />
+    <Compile Include="Ampache\Tag.cs" />
+    <Compile Include="Ampache\Video.cs" />
     <Compile Include="MusicBeeInterface.cs" />
     <Compile Include="AmpachePlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

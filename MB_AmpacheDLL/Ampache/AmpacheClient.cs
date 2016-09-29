@@ -145,6 +145,8 @@ namespace MusicBeePlugin.Ampache
             }
         }
 
+        
+
         private string ToApiUrl(Dictionary<string, string> dict)
         {
             StringBuilder s = new StringBuilder(AmpacheUrl);

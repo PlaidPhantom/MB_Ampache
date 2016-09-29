@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
+﻿using System.Runtime.Serialization;
+using System.Xml.Serialization;
 
 namespace MusicBeePlugin.Ampache
 {
-    [DataContract(Name = "root", Namespace = "")]
+    [XmlRoot(ElementName = "root", Namespace = "")]
     public class AmpacheResponse
     {
-        [DataMember(Name = "error", IsRequired = false, Order = 0)]
+        [XmlElement("error")]
         public string ErrorMessage { get; set; }
 
         [IgnoreDataMember]
