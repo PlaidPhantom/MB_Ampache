@@ -56,9 +56,7 @@ namespace MusicBeePlugin.Ampache
             return string.Join("", hash.Select(b => b.ToString("x2")));
         }
 
-        public event EventHandler<AmpacheConnectedEventArgs> Connected;
-
-        public void Connect()
+        public void Connect(Action onConnected)
         {
             var sha256 = SHA256.Create();
 
@@ -121,10 +119,10 @@ namespace MusicBeePlugin.Ampache
 
                     cancellationSignal.Token.ThrowIfCancellationRequested();
 
-                    Connect();
+                    Ping();
                 }, cancellationSignal.Token);
 
-                Connected(this, new AmpacheConnectedEventArgs { Response = response });
+                onConnected();
             };
 
             apiClient.DownloadDataAsync(url);
@@ -145,7 +143,114 @@ namespace MusicBeePlugin.Ampache
             }
         }
 
-        
+        public void Ping()
+        {
+            MakeApiCall<PingResponse>("ping", null, (response) =>
+            {
+                var refreshTime = response.SessionExpiration - DateTimeOffset.Now - TimeSpan.FromMinutes(1);
+
+                cancellationSignal = new CancellationTokenSource();
+
+                refreshTokenTask = Task.Factory.StartNew(() =>
+                {
+                    cancellationSignal.Token.WaitHandle.WaitOne(refreshTime);
+
+                    cancellationSignal.Token.ThrowIfCancellationRequested();
+
+                    Ping();
+                }, cancellationSignal.Token);
+            });
+        }
+
+        public void UrlToSong(string songUrl, Action<Song> callback)
+        {
+            MakeApiCall<SongsResponse>("url_to_song", new Dictionary<string, string> { ["url"] = songUrl }, (response) =>
+            {
+                callback(response.Songs[0]);
+            });
+        }
+
+        public void GetArtists(string filter, Action<Artist[]> callback, bool filterIsExact = false, int? offset = null, int? limit = null)
+        {
+            var options = new Dictionary<string, string>();
+
+            if(!string.IsNullOrEmpty(filter))
+            {
+                options.Add("filter", filter);
+                options.Add("exact", filterIsExact.ToString());
+            }
+
+            if (offset.HasValue)
+                options.Add("offset", offset.Value.ToString());
+
+            if (limit.HasValue)
+                options.Add("limit", limit.Value.ToString());
+
+            MakeApiCall<ArtistsResponse>("artists", options, (response) =>
+            {
+                callback(response.Artists);
+            });
+        }
+
+        public void GetArtist(int artistId, Action<Artist> callback)
+        {
+            var options = new Dictionary<string, string>();
+
+            options.Add("filter", artistId.ToString());
+
+            MakeApiCall<ArtistsResponse>("artists", options, (response) =>
+            {
+                callback(response.Artists[0]);
+            });
+        }
+
+        public void GetArtistSongs(int artistId, Action<Song[]> callback)
+        {
+            var options = new Dictionary<string, string>();
+
+            options.Add("filter", artistId.ToString());
+
+            MakeApiCall<SongsResponse>("artist_songs", options, (response) =>
+            {
+                callback(response.Songs);
+            });
+        }
+
+        private void MakeApiCall<T>(string action, Dictionary<string, string> parameters, Action<T> callback) where T : AmpacheResponse
+        {
+            var urlParams = new Dictionary<string, string>
+            {
+                ["action"] = action,
+                ["auth"] = AuthToken,
+            };
+
+            if(parameters != null)
+                foreach(var pair in parameters)
+                    urlParams.Add(pair.Key, pair.Value);
+
+            var url = new Uri(ToApiUrl(urlParams));
+
+            var apiClient = new WebClient();
+
+            apiClient.DownloadDataCompleted += (sender, args) =>
+            {
+                var result = args.Result;
+
+                var serializer = new XmlSerializer(typeof(T));
+
+                var stream = new MemoryStream(result);
+                var response = (T)serializer.Deserialize(stream);
+
+                if (response.HasError)
+                    throw new AmpacheException(response.ErrorMessage);
+
+                callback(response);
+
+            };
+
+            apiClient.DownloadDataAsync(url);
+
+        }
 
         private string ToApiUrl(Dictionary<string, string> dict)
         {

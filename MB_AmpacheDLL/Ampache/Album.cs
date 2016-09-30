@@ -11,6 +11,7 @@ namespace MusicBeePlugin.Ampache
         [XmlElement("name")]
         public string Name { get; set; }
 
+        [XmlElement("artist")]
         public ArtistReference Artist { get; set; }
 
         [XmlElement("year")]
@@ -28,6 +29,7 @@ namespace MusicBeePlugin.Ampache
         [XmlElement("rating")]
         public decimal Rating { get; set; }
 
+        [XmlElement("tag")]
         public TagReference[] Tags { get; set; }
     }
 

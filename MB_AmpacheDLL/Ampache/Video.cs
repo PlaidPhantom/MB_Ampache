@@ -20,6 +20,7 @@ namespace MusicBeePlugin.Ampache
         [XmlElement("size")]
         public int SizeBytes { get; set; }
 
+        [XmlElement("tag")]
         TagReference[] Tags { get; set; }
 
         [XmlElement("url")]

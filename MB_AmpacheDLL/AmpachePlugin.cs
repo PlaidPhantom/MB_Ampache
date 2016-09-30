@@ -142,8 +142,7 @@ namespace MusicBeePlugin
             {
                 ampache = new AmpacheClient(CurrentSettings.MakeUrl(), CurrentSettings.Username, CurrentSettings.PasswordHash);
 
-                ampache.Connected += Ampache_Connected;
-                ampache.Connect();
+                ampache.Connect(() => { });
             }
             else
                 ampache = null;

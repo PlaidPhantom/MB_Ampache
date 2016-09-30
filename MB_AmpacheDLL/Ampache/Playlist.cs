@@ -17,6 +17,7 @@ namespace MusicBeePlugin.Ampache
         [XmlElement("items")]
         public int Items { get; set; }
 
+        [XmlElement("tag")]
         TagReference[] Tags { get; set; }
 
         [XmlElement("type")]

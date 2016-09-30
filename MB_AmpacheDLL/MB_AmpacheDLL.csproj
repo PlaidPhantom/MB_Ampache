@@ -86,6 +86,7 @@
     <Compile Include="Ampache\AmpacheResponse.cs" />
     <Compile Include="Ampache\Artist.cs" />
     <Compile Include="Ampache\HandshakeResponse.cs" />
+    <Compile Include="Ampache\PIngResponse.cs" />
     <Compile Include="Ampache\Playlist.cs" />
     <Compile Include="Ampache\Song.cs" />
     <Compile Include="Ampache\Tag.cs" />
