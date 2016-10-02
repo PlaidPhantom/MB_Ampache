@@ -564,6 +564,59 @@ namespace MusicBeePlugin.Ampache
 
         #endregion
 
+        #region Videos
+
+        public void GetVideos(string filter, Action<Video[]> callback, bool filterIsExact = false, int? offset = null, int? limit = null)
+        {
+            var options = new Dictionary<string, string>();
+
+            if (!string.IsNullOrEmpty(filter))
+                options.Add("filter", filter);
+
+            if (offset.HasValue)
+                options.Add("offset", offset.Value.ToString());
+
+            if (limit.HasValue)
+                options.Add("limit", limit.Value.ToString());
+
+            MakeApiCall<VideosResponse>("videos", options, (response) =>
+            {
+                callback(response.Videos);
+            });
+        }
+
+        public void GetVideo(int videoId, Action<Video> callback)
+        {
+            var options = new Dictionary<string, string>();
+
+            options.Add("filter", videoId.ToString());
+
+            MakeApiCall<VideosResponse>("playlist", options, (response) =>
+            {
+                callback(response.Videos[0]);
+            });
+        }
+
+        #endregion
+
+        #region Rating
+
+        public void Rate(string type, int id, int rating, Action callback)
+        {
+            var options = new Dictionary<string, string>();
+
+            options.Add("type", type);
+            options.Add("id", id.ToString());
+            options.Add("rating", rating.ToString());
+
+            MakeApiCall<VideosResponse>("rate", options, (response) =>
+            {
+                callback();
+            });
+        }
+
+        #endregion
+
         private void MakeApiCall<T>(string action, Dictionary<string, string> parameters, Action<T> callback) where T : AmpacheResponse
         {
             var urlParams = new Dictionary<string, string>

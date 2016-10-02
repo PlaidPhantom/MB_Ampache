@@ -26,4 +26,13 @@ namespace MusicBeePlugin.Ampache
         [XmlElement("url")]
         public string Url { get; set; }
     }
+
+    [XmlRoot("root")]
+    public class VideosResponse : AmpacheResponse
+    {
+        [XmlElement("total_count")]
+        public int TotalCount { get; set; }
+        [XmlElement("video")]
+        public Video[] Videos { get; set; }
+    }
 }
