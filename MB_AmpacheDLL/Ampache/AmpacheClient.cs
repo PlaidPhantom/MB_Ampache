@@ -452,6 +452,118 @@ namespace MusicBeePlugin.Ampache
 
         #endregion
 
+        #region Playlists
+
+        public void GetPlaylists(string filter, Action<Playlist[]> callback, bool filterIsExact = false, int? offset = null, int? limit = null)
+        {
+            var options = new Dictionary<string, string>();
+
+            if (!string.IsNullOrEmpty(filter))
+                options.Add("filter", filter);
+
+            if (offset.HasValue)
+                options.Add("offset", offset.Value.ToString());
+
+            if (limit.HasValue)
+                options.Add("limit", limit.Value.ToString());
+
+            MakeApiCall<PlaylistsResponse>("playlists", options, (response) =>
+            {
+                callback(response.Playlists);
+            });
+        }
+
+        public void GetPlaylist(int playlistId, Action<Playlist> callback)
+        {
+            var options = new Dictionary<string, string>();
+
+            options.Add("filter", playlistId.ToString());
+
+            MakeApiCall<PlaylistsResponse>("playlist", options, (response) =>
+            {
+                callback(response.Playlists[0]);
+            });
+        }
+
+        public void GetPlaylistSongs(int playlistId, Action<Song[]> callback, int? offset = null, int? limit = null)
+        {
+            var options = new Dictionary<string, string>();
+
+            options.Add("filter", playlistId.ToString());
+
+            if (offset.HasValue)
+                options.Add("offset", offset.Value.ToString());
+
+            if (limit.HasValue)
+                options.Add("limit", limit.Value.ToString());
+
+            MakeApiCall<SongsResponse>("playlist_songs", options, (response) =>
+            {
+                callback(response.Songs);
+            });
+        }
+
+        public void CreatePlaylist(string name, Action<Playlist> callback, string type = null)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException("Playlist name is required.", nameof(name));
+
+            if (type != null && type != "public" && type != "private")
+                throw new ArgumentException("Playlist type, if provided, must be \"public\" or \"private\".");
+
+            var options = new Dictionary<string, string>();
+
+            options.Add("name", name);
+
+            if (type != null)
+                options.Add("type", type);
+
+            MakeApiCall<PlaylistsResponse>("playlist_create", options, (response) =>
+            {
+                callback(response.Playlists[0]);
+            });
+        }
+
+        public void DeletePlaylist(int playlistId, Action callback)
+        {
+            var options = new Dictionary<string, string>();
+
+            options.Add("filter", playlistId.ToString());
+
+            MakeApiCall<AmpacheResponse>("playlist_songs", options, (response) =>
+            {
+                callback();
+            });
+        }
+
+        public void PlaylistAddSong(int playlistId, int songId, Action callback)
+        {
+            var options = new Dictionary<string, string>();
+
+            options.Add("filter", playlistId.ToString());
+            options.Add("song", songId.ToString());
+
+            MakeApiCall<AmpacheResponse>("playlist_add_song", options, (response) =>
+            {
+                callback();
+            });
+        }
+
+        public void PlaylistRemoveTrack(int playlistId, int trackNumber, Action callback)
+        {
+            var options = new Dictionary<string, string>();
+
+            options.Add("filter", playlistId.ToString());
+            options.Add("track", trackNumber.ToString());
+
+            MakeApiCall<AmpacheResponse>("playlist_remove_song", options, (response) =>
+            {
+                callback();
+            });
+        }
+
+        #endregion
+
         private void MakeApiCall<T>(string action, Dictionary<string, string> parameters, Action<T> callback) where T : AmpacheResponse
         {
             var urlParams = new Dictionary<string, string>

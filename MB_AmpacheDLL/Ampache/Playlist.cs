@@ -23,4 +23,14 @@ namespace MusicBeePlugin.Ampache
         [XmlElement("type")]
         public string Type { get; set; }
     }
+
+    [XmlRoot("root")]
+    public class PlaylistsResponse : AmpacheResponse
+    {
+        [XmlElement("total_count")]
+        public int TotalCount { get; set; }
+
+        [XmlElement("playlist")]
+        public Playlist[] Playlists { get; set; }
+    }
 }
