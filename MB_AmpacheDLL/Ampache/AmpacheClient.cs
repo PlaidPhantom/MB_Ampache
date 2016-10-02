@@ -25,17 +25,17 @@ namespace MusicBeePlugin.Ampache
         private Task refreshTokenTask;
         private CancellationTokenSource cancellationSignal;
 
-        public DateTimeOffset LastUpdate { get; set; }
-        public DateTimeOffset LastAdd { get; set; }
-        public DateTimeOffset LastClean { get; set; }
+        public DateTimeOffset LastUpdate { get; private set; }
+        public DateTimeOffset LastAdd { get; private set; }
+        public DateTimeOffset LastClean { get; private set; }
 
-        public int TotalSongs { get; set; }
-        public int TotalAlbums { get; set; }
-        public int TotalArtists { get; set; }
-        public int TotalTags { get; set; }
-        public int TotalPlaylists { get; set; }
-        public int TotalVideos { get; set; }
-        public int TotalCatalogs { get; set; }
+        public int TotalSongs { get; private set; }
+        public int TotalAlbums { get; private set; }
+        public int TotalArtists { get; private set; }
+        public int TotalTags { get; private set; }
+        public int TotalPlaylists { get; private set; }
+        public int TotalVideos { get; private set; }
+        public int TotalCatalogs { get; private set; }
 
 
         public AmpacheClient(string baseUrl, string username, string passwordHash)
@@ -170,6 +170,8 @@ namespace MusicBeePlugin.Ampache
             });
         }
 
+        #region Artists
+
         public void GetArtists(string filter, Action<Artist[]> callback, bool filterIsExact = false, int? offset = null, int? limit = null)
         {
             var options = new Dictionary<string, string>();
@@ -204,17 +206,251 @@ namespace MusicBeePlugin.Ampache
             });
         }
 
-        public void GetArtistSongs(int artistId, Action<Song[]> callback)
+        public void GetArtistSongs(int artistId, Action<Song[]> callback, int? offset = null, int? limit = null)
         {
             var options = new Dictionary<string, string>();
 
             options.Add("filter", artistId.ToString());
+
+            if (offset.HasValue)
+                options.Add("offset", offset.Value.ToString());
+
+            if (limit.HasValue)
+                options.Add("limit", limit.Value.ToString());
 
             MakeApiCall<SongsResponse>("artist_songs", options, (response) =>
             {
                 callback(response.Songs);
             });
         }
+
+        public void GetArtistAlbums(int artistId, Action<Album[]> callback, int? offset = null, int? limit = null)
+        {
+            var options = new Dictionary<string, string>();
+
+            options.Add("filter", artistId.ToString());
+
+            if (offset.HasValue)
+                options.Add("offset", offset.Value.ToString());
+
+            if (limit.HasValue)
+                options.Add("limit", limit.Value.ToString());
+
+            MakeApiCall<AlbumsResponse>("artist_albums", options, (response) =>
+            {
+                callback(response.Albums);
+            });
+        }
+
+        #endregion
+
+        #region Albums
+
+        public void GetAlbums(string filter, Action<Album[]> callback, bool filterIsExact = false, int? offset = null, int? limit = null)
+        {
+            var options = new Dictionary<string, string>();
+
+            if (!string.IsNullOrEmpty(filter))
+            {
+                options.Add("filter", filter);
+                options.Add("exact", filterIsExact.ToString());
+            }
+
+            if (offset.HasValue)
+                options.Add("offset", offset.Value.ToString());
+
+            if (limit.HasValue)
+                options.Add("limit", limit.Value.ToString());
+
+            MakeApiCall<AlbumsResponse>("albums", options, (response) =>
+            {
+                callback(response.Albums);
+            });
+        }
+
+        public void GetAlbum(int albumId, Action<Album> callback)
+        {
+            var options = new Dictionary<string, string>();
+            
+            options.Add("filter", albumId.ToString());
+
+            MakeApiCall<AlbumsResponse>("album", options, (response) =>
+            {
+                callback(response.Albums[0]);
+            });
+        }
+
+        public void GetAlbumSongs(int albumId, Action<Song[]> callback, int? offset = null, int? limit = null)
+        {
+            var options = new Dictionary<string, string>();
+
+            options.Add("filter", albumId.ToString());
+
+            if (offset.HasValue)
+                options.Add("offset", offset.Value.ToString());
+
+            if (limit.HasValue)
+                options.Add("limit", limit.Value.ToString());
+
+            MakeApiCall<SongsResponse>("album_songs", options, (response) =>
+            {
+                callback(response.Songs);
+            });
+        }
+
+        #endregion
+
+        #region Tags
+
+        public void GetTags(string filter, Action<Tag[]> callback, bool filterIsExact = false, int? offset = null, int? limit = null)
+        {
+            var options = new Dictionary<string, string>();
+
+            if (!string.IsNullOrEmpty(filter))
+            {
+                options.Add("filter", filter);
+                options.Add("exact", filterIsExact.ToString());
+            }
+
+            if (offset.HasValue)
+                options.Add("offset", offset.Value.ToString());
+
+            if (limit.HasValue)
+                options.Add("limit", limit.Value.ToString());
+
+            MakeApiCall<TagsResponse>("tags", options, (response) =>
+            {
+                callback(response.Tags);
+            });
+        }
+
+        public void GetTag(int tagId, Action<Tag> callback)
+        {
+            var options = new Dictionary<string, string>();
+
+            options.Add("filter", tagId.ToString());
+
+            MakeApiCall<TagsResponse>("tag", options, (response) =>
+            {
+                callback(response.Tags[0]);
+            });
+        }
+
+        public void GetTagArtists(int tagId, Action<Artist[]> callback, int? offset = null, int? limit = null)
+        {
+            var options = new Dictionary<string, string>();
+
+            options.Add("filter", tagId.ToString());
+
+            if (offset.HasValue)
+                options.Add("offset", offset.Value.ToString());
+
+            if (limit.HasValue)
+                options.Add("limit", limit.Value.ToString());
+
+            MakeApiCall<ArtistsResponse>("tag_albums", options, (response) =>
+            {
+                callback(response.Artists);
+            });
+        }
+
+        public void GetTagAlbums(int tagId, Action<Album[]> callback, int? offset = null, int? limit = null)
+        {
+            var options = new Dictionary<string, string>();
+
+            options.Add("filter", tagId.ToString());
+
+            if (offset.HasValue)
+                options.Add("offset", offset.Value.ToString());
+
+            if (limit.HasValue)
+                options.Add("limit", limit.Value.ToString());
+
+            MakeApiCall<AlbumsResponse>("tag_albums", options, (response) =>
+            {
+                callback(response.Albums);
+            });
+        }
+
+        public void GetTagSongs(int tagId, Action<Song[]> callback, int? offset = null, int? limit = null)
+        {
+            var options = new Dictionary<string, string>();
+
+            options.Add("filter", tagId.ToString());
+
+            if (offset.HasValue)
+                options.Add("offset", offset.Value.ToString());
+
+            if (limit.HasValue)
+                options.Add("limit", limit.Value.ToString());
+
+            MakeApiCall<SongsResponse>("tag_songs", options, (response) =>
+            {
+                callback(response.Songs);
+            });
+        }
+
+        #endregion
+
+        #region Songs
+
+        public void GetSongs(string filter, Action<Song[]> callback, bool filterIsExact = false, int? offset = null, int? limit = null)
+        {
+            var options = new Dictionary<string, string>();
+
+            if (!string.IsNullOrEmpty(filter))
+            {
+                options.Add("filter", filter);
+                options.Add("exact", filterIsExact.ToString());
+            }
+
+            if (offset.HasValue)
+                options.Add("offset", offset.Value.ToString());
+
+            if (limit.HasValue)
+                options.Add("limit", limit.Value.ToString());
+
+            MakeApiCall<SongsResponse>("songs", options, (response) =>
+            {
+                callback(response.Songs);
+            });
+        }
+
+        public void GetSong(int songId, Action<Song> callback)
+        {
+            var options = new Dictionary<string, string>();
+
+            options.Add("filter", songId.ToString());
+
+            MakeApiCall<SongsResponse>("song", options, (response) =>
+            {
+                callback(response.Songs[0]);
+            });
+        }
+
+        public void SearchSongs(string filter, Action<Song[]> callback, int? offset = null, int? limit = null)
+        {
+            if (string.IsNullOrEmpty(filter))
+                throw new ArgumentException("filter must have a value", nameof(filter));
+
+            var options = new Dictionary<string, string>();
+
+            if (!string.IsNullOrEmpty(filter))
+                options.Add("filter", filter);
+
+            if (offset.HasValue)
+                options.Add("offset", offset.Value.ToString());
+
+            if (limit.HasValue)
+                options.Add("limit", limit.Value.ToString());
+
+            MakeApiCall<SongsResponse>("search_songs", options, (response) =>
+            {
+                callback(response.Songs);
+            });
+        }
+
+        #endregion
 
         private void MakeApiCall<T>(string action, Dictionary<string, string> parameters, Action<T> callback) where T : AmpacheResponse
         {

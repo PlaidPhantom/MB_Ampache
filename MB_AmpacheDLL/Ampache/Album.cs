@@ -28,6 +28,11 @@ namespace MusicBeePlugin.Ampache
         public decimal PreciseRating { get; set; }
         [XmlElement("rating")]
         public decimal Rating { get; set; }
+        [XmlElement("averagerating")]
+        public decimal AverageRating { get; set; }
+
+        [XmlElement("mbid")]
+        public string MBID { get; set; }
 
         [XmlElement("tag")]
         public TagReference[] Tags { get; set; }
@@ -41,5 +46,14 @@ namespace MusicBeePlugin.Ampache
 
         [XmlText]
         public string Name { get; set; }
+    }
+
+    [XmlRoot("root")]
+    public class AlbumsResponse : AmpacheResponse
+    {
+        [XmlElement("total_count")]
+        public int TotalCount { get; set; }
+        [XmlElement("album")]
+        public Album[] Albums { get; set; }
     }
 }

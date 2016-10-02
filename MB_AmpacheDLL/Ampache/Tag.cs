@@ -16,9 +16,9 @@ namespace MusicBeePlugin.Ampache
         public int NumArtists { get; set; }
         [XmlElement("songs")]
         public int NumSongs { get; set; }
-        [XmlElement("video")]
+        [XmlElement("videos")]
         public int NumVideos { get; set; }
-        [XmlElement("playlist")]
+        [XmlElement("playlists")]
         public int NumPlaylists { get; set; }
         [XmlElement("stream")]
         public int NumStreams { get; set; }
@@ -35,5 +35,15 @@ namespace MusicBeePlugin.Ampache
 
         [XmlAttribute("count")]
         public int Count { get; set; }
+    }
+
+    [XmlRoot("root")]
+    public class TagsResponse : AmpacheResponse
+    {
+        [XmlElement("total_count")]
+        public int TotalCount { get; set; }
+
+        [XmlElement("tag")]
+        public Tag[] Tags { get; set; }
     }
 }
