@@ -13,8 +13,8 @@ namespace MusicBeePlugin
     {
         public Protocol Protocol
         {
-            get { return (Protocol)Enum.Parse(typeof(Protocol), (string)ProtocolSelect.SelectedValue); }
-            set { ProtocolSelect.SelectedValue = Enum.GetName(typeof(Protocol), value); }
+            get { return (Protocol)Enum.Parse(typeof(Protocol), (string)ProtocolSelect.SelectedItem); }
+            set { ProtocolSelect.SelectedItem = Enum.GetName(typeof(Protocol), value); }
         }
 
         public string Server
@@ -41,7 +41,7 @@ namespace MusicBeePlugin
             set { PasswordField.Text = value; }
         }
 
-        public SettingsControl()
+        public SettingsControl() : base()
         {
             InitializeComponent();
             ProtocolSelect.Items.Clear();
@@ -50,7 +50,7 @@ namespace MusicBeePlugin
 
         private void ProtocolSelect_SelectedIndexChanged(object sender, EventArgs e)
         {
-            switch((string)ProtocolSelect.SelectedValue)
+            switch((string)ProtocolSelect.SelectedItem)
             {
                 case "HTTP":
                     PortSpinner.Value = 80;

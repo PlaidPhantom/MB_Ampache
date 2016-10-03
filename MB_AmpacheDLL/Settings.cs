@@ -6,7 +6,7 @@ using System.Text;
 namespace MusicBeePlugin
 {
     [Serializable]
-    class Settings
+    public class Settings
     {
 
         public Protocol Protocol { get; set; }
@@ -47,6 +47,16 @@ namespace MusicBeePlugin
         public static bool operator !=(Settings lhs, Settings rhs)
         {
             return !(lhs == rhs);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj.GetType() == typeof(Settings) && (Settings)obj == this;
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
         }
     }
 

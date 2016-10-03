@@ -7,6 +7,19 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MB_AmpacheDLL", "MB_Ampache
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{111AB1F6-B4B2-41A5-BB03-C69841A24D6D}"
 EndProject
+Project("{911E67C6-3D85-4FCE-B560-20A9C3E3FF48}") = "MusicBee", "..\..\Program Files (x86)\MusicBee\MusicBee.exe", "{42434F6A-BC62-4F15-93AC-039756B2C1FB}"
+	ProjectSection(DebuggerProjectSystem) = preProject
+		PortSupplier = 00000000-0000-0000-0000-000000000000
+		Executable = C:\Program Files (x86)\MusicBee\MusicBee.exe
+		RemoteMachine = PLAIDXPS
+		StartingDirectory = C:\Program Files (x86)\MusicBee
+		Environment = Default
+		LaunchingEngine = 00000000-0000-0000-0000-000000000000
+		UseLegacyDebugEngines = No
+		LaunchSQLEngine = No
+		AttachLaunchAction = No
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +44,10 @@ Global
 		{111AB1F6-B4B2-41A5-BB03-C69841A24D6D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{111AB1F6-B4B2-41A5-BB03-C69841A24D6D}.Release|x86.ActiveCfg = Release|Any CPU
 		{111AB1F6-B4B2-41A5-BB03-C69841A24D6D}.Release|x86.Build.0 = Release|Any CPU
+		{42434F6A-BC62-4F15-93AC-039756B2C1FB}.Debug|Any CPU.ActiveCfg = Release|x86
+		{42434F6A-BC62-4F15-93AC-039756B2C1FB}.Debug|x86.ActiveCfg = Release|x86
+		{42434F6A-BC62-4F15-93AC-039756B2C1FB}.Release|Any CPU.ActiveCfg = Release|x86
+		{42434F6A-BC62-4F15-93AC-039756B2C1FB}.Release|x86.ActiveCfg = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

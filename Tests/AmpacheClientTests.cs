@@ -26,21 +26,12 @@ namespace Tests
         {
             ManualResetEvent e = new ManualResetEvent(false);
 
-            HandshakeResponse result = null;
-
-            ampacheClient.Connected += (sender, eventArgs) =>
+            ampacheClient.Connect(() =>
             {
-                result = eventArgs.Response;
-
                 e.Set();
-            };
-
-            ampacheClient.Connect();
+            });
 
             e.WaitOne();
-
-            Assert.IsNotNull(result);
-            Assert.IsNotNull(result.AuthToken);
         }
     }
 }

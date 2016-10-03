@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using MusicBeePlugin.Ampache;
 using System.IO;
 using System.Xml.Serialization;
+using System.Drawing;
 
 namespace MusicBeePlugin
 {
@@ -47,7 +48,7 @@ namespace MusicBeePlugin
             about.MinInterfaceVersion = MinInterfaceVersion;
             about.MinApiRevision = MinApiRevision;
             about.ReceiveNotifications = (ReceiveNotificationFlags.PlayerEvents | ReceiveNotificationFlags.TagEvents);
-            about.ConfigurationPanelHeight = SettingsControl.Height;   // height in pixels that musicbee should reserve in a panel for config settings. When set, a handle to an empty panel will be passed to the Configure function
+            about.ConfigurationPanelHeight = TextRenderer.MeasureText("FirstRowText", SystemFonts.DefaultFont).Height * 12;   // height in pixels that musicbee should reserve in a panel for config settings. When set, a handle to an empty panel will be passed to the Configure function
             return about;
         }
 
@@ -59,6 +60,8 @@ namespace MusicBeePlugin
             if (panelHandle != IntPtr.Zero)
             {
                 Panel configPanel = (Panel)Control.FromHandle(panelHandle);
+
+                SettingsControl = new SettingsControl();
 
                 SettingsControl.Protocol = CurrentSettings.Protocol;
                 SettingsControl.Server = CurrentSettings.Server;
@@ -90,15 +93,33 @@ namespace MusicBeePlugin
                     PasswordHash = "password"
                 };
             }
-
-            using (var stream = File.OpenRead(configFile))
+            else
             {
-                var serializer = new XmlSerializer(typeof(Settings));
+                using (var stream = File.OpenRead(configFile))
+                {
+                    try
+                    {
+                        var serializer = new XmlSerializer(typeof(Settings));
 
-                CurrentSettings = (Settings)serializer.Deserialize(stream);
+                        CurrentSettings = (Settings)serializer.Deserialize(stream);
+                    }
+                    catch(Exception e)
+                    {
+                        MessageBox.Show("Could not load MB_Ampache settings file, using defaults.", "MB_Ampache Plugin Error", MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1, 0);
+
+                        CurrentSettings = new Settings
+                        {
+                            Protocol = Protocol.HTTP,
+                            Server = DefaultServer,
+                            Port = 80,
+                            Username = "username",
+                            PasswordHash = "password"
+                        };
+                    }
+                }
+
+                ampache = new AmpacheClient(CurrentSettings.MakeUrl(), CurrentSettings.Username, CurrentSettings.PasswordHash);
             }
-
-            ampache = new AmpacheClient(CurrentSettings.MakeUrl(), CurrentSettings.Username, CurrentSettings.PasswordHash);
         }
 
         // called by MusicBee when the user clicks Apply or Save in the MusicBee Preferences screen.
@@ -149,7 +170,7 @@ namespace MusicBeePlugin
         }
         private void StopApi()
         {
-            ampache.Disconnect();
+            ampache?.Disconnect();
         }
 
         private void Ampache_Connected(object sender, AmpacheConnectedEventArgs e)

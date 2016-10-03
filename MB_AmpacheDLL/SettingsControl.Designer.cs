@@ -30,7 +30,6 @@
         {
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.label1 = new System.Windows.Forms.Label();
-            this.ProtocolSelect = new System.Windows.Forms.ListBox();
             this.ServerField = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
@@ -39,6 +38,7 @@
             this.UsernameField = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.PasswordField = new System.Windows.Forms.TextBox();
+            this.ProtocolSelect = new System.Windows.Forms.ComboBox();
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.PortSpinner)).BeginInit();
             this.SuspendLayout();
@@ -49,7 +49,6 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel1.Controls.Add(this.label1, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.ProtocolSelect, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.ServerField, 1, 1);
             this.tableLayoutPanel1.Controls.Add(this.label2, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.label3, 0, 2);
@@ -58,6 +57,7 @@
             this.tableLayoutPanel1.Controls.Add(this.UsernameField, 1, 3);
             this.tableLayoutPanel1.Controls.Add(this.label5, 0, 4);
             this.tableLayoutPanel1.Controls.Add(this.PasswordField, 1, 4);
+            this.tableLayoutPanel1.Controls.Add(this.ProtocolSelect, 1, 0);
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 5;
@@ -78,19 +78,6 @@
             this.label1.Size = new System.Drawing.Size(83, 25);
             this.label1.TabIndex = 0;
             this.label1.Text = "Protocol";
-            // 
-            // ProtocolSelect
-            // 
-            this.ProtocolSelect.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.ProtocolSelect.FormattingEnabled = true;
-            this.ProtocolSelect.ItemHeight = 24;
-            this.ProtocolSelect.Items.AddRange(new object[] {
-            "HTTP"});
-            this.ProtocolSelect.Location = new System.Drawing.Point(111, 8);
-            this.ProtocolSelect.Name = "ProtocolSelect";
-            this.ProtocolSelect.Size = new System.Drawing.Size(120, 28);
-            this.ProtocolSelect.TabIndex = 1;
-            this.ProtocolSelect.SelectedIndexChanged += new System.EventHandler(this.ProtocolSelect_SelectedIndexChanged);
             // 
             // ServerField
             // 
@@ -179,10 +166,20 @@
             this.PasswordField.TabIndex = 9;
             this.PasswordField.Text = "password";
             // 
+            // ProtocolSelect
+            // 
+            this.ProtocolSelect.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.ProtocolSelect.FormattingEnabled = true;
+            this.ProtocolSelect.Location = new System.Drawing.Point(111, 6);
+            this.ProtocolSelect.Name = "ProtocolSelect";
+            this.ProtocolSelect.Size = new System.Drawing.Size(121, 32);
+            this.ProtocolSelect.TabIndex = 10;
+            // 
             // SettingsControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(11F, 24F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoSize = true;
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "SettingsControl";
             this.Size = new System.Drawing.Size(620, 233);
@@ -197,7 +194,6 @@
 
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.ListBox ProtocolSelect;
         private System.Windows.Forms.TextBox ServerField;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
@@ -206,5 +202,6 @@
         private System.Windows.Forms.TextBox UsernameField;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox PasswordField;
+        private System.Windows.Forms.ComboBox ProtocolSelect;
     }
 }
