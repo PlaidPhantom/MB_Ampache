@@ -105,7 +105,8 @@ namespace MusicBeePlugin
                     }
                     catch(Exception e)
                     {
-                        MessageBox.Show("Could not load MB_Ampache settings file, using defaults.", "MB_Ampache Plugin Error", MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1, 0);
+                        var errText = "Could not load MB_Ampache settings file, using defaults." + Environment.NewLine + Environment.NewLine + "Details: " + e.Message;
+                        MessageBox.Show(errText, "MB_Ampache Plugin Error", MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1, 0);
 
                         CurrentSettings = new Settings
                         {
