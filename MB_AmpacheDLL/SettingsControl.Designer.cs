@@ -174,6 +174,7 @@
             this.ProtocolSelect.Name = "ProtocolSelect";
             this.ProtocolSelect.Size = new System.Drawing.Size(121, 32);
             this.ProtocolSelect.TabIndex = 10;
+            this.ProtocolSelect.SelectedIndexChanged += new System.EventHandler(this.ProtocolSelect_SelectedIndexChanged);
             // 
             // SettingsControl
             // 

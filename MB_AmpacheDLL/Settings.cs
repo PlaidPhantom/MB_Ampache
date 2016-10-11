@@ -41,7 +41,9 @@ namespace MusicBeePlugin
                 && lhs.Server == rhs.Server
                 && lhs.Port == rhs.Port
                 && lhs.Username == rhs.Username
-                && lhs.PasswordHash == rhs.PasswordHash;
+                && (string.IsNullOrEmpty(lhs.PasswordHash)
+                     || string.IsNullOrEmpty(rhs.PasswordHash)
+                     || lhs.PasswordHash == rhs.PasswordHash);
         }
 
         public static bool operator !=(Settings lhs, Settings rhs)

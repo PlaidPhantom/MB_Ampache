@@ -134,7 +134,7 @@ namespace MusicBeePlugin
                 Port = SettingsControl.Port,
                 Username = SettingsControl.Username,
                 PasswordHash = AmpacheClient.PreHash(SettingsControl.Password)
-            };
+        };
 
             if (newSettings == CurrentSettings)
                 return;
@@ -150,7 +150,7 @@ namespace MusicBeePlugin
             {
                 var serializer = new XmlSerializer(typeof(Settings));
 
-                serializer.Serialize(stream, CurrentSettings);
+                serializer.Serialize(stream, newSettings);
             }
 
             CurrentSettings = newSettings;
