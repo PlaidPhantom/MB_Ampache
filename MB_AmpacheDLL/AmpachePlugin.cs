@@ -4,6 +4,7 @@ using MusicBeePlugin.Ampache;
 using System.IO;
 using System.Xml.Serialization;
 using System.Drawing;
+using System.Collections.Generic;
 
 namespace MusicBeePlugin
 {
@@ -27,27 +28,25 @@ namespace MusicBeePlugin
             SettingsControl = new SettingsControl();
         }
 
+        #region MusicBee Plugin Infrastructure
+
         public PluginInfo Initialise(IntPtr apiInterfacePtr)
         {
             mbApiInterface = new MusicBeeApiInterface();
             mbApiInterface.Initialise(apiInterfacePtr);
 
-            LoadSettings();
-
-            StartApi();
-
             about.PluginInfoVersion = PluginInfoVersion;
             about.Name = "MB_Ampache";
             about.Description = "Access your Ampache music library within MusicBee";
             about.Author = "Sam Shores";
-            about.TargetApplication = "";   // current only applies to artwork, lyrics or instant messenger name that appears in the provider drop down selector or target Instant Messenger
+            about.TargetApplication = "Ampache";
             about.Type = PluginType.Storage;
-            about.VersionMajor = 0;  // your plugin version
+            about.VersionMajor = 0;
             about.VersionMinor = 0;
             about.Revision = 1;
             about.MinInterfaceVersion = MinInterfaceVersion;
             about.MinApiRevision = MinApiRevision;
-            about.ReceiveNotifications = (ReceiveNotificationFlags.PlayerEvents | ReceiveNotificationFlags.TagEvents);
+            about.ReceiveNotifications = ReceiveNotificationFlags.StartupOnly;
             about.ConfigurationPanelHeight = TextRenderer.MeasureText("FirstRowText", SystemFonts.DefaultFont).Height * 12;   // height in pixels that musicbee should reserve in a panel for config settings. When set, a handle to an empty panel will be passed to the Configure function
             return about;
         }
@@ -164,7 +163,7 @@ namespace MusicBeePlugin
             {
                 ampache = new AmpacheClient(CurrentSettings.MakeUrl(), CurrentSettings.Username, CurrentSettings.PasswordHash);
 
-                ampache.Connect(() => { });
+                ampache.Connect();
             }
             else
                 ampache = null;
@@ -172,10 +171,6 @@ namespace MusicBeePlugin
         private void StopApi()
         {
             ampache?.Disconnect();
-        }
-
-        private void Ampache_Connected(object sender, AmpacheConnectedEventArgs e)
-        {
         }
 
         // MusicBee is closing the plugin (plugin is being disabled by user or MusicBee is shutting down)
@@ -200,47 +195,124 @@ namespace MusicBeePlugin
         public void ReceiveNotification(string sourceFileUrl, NotificationType type)
         {
             // perform some action depending on the notification type
-            switch (type)
+            if (type == NotificationType.PluginStartup)
             {
-                case NotificationType.PluginStartup:
-                    // perform startup initialisation
-                    switch (mbApiInterface.Player_GetPlayState())
-                    {
-                        case PlayState.Playing:
-                        case PlayState.Paused:
-                            // ...
-                            break;
-                    }
-                    break;
-                case NotificationType.TrackChanged:
-                    string artist = mbApiInterface.NowPlaying_GetFileTag(MetaDataType.Artist);
-                    // ...
-                    break;
+                try
+                {
+                    LoadSettings();
+
+                    StartApi();
+
+                    mbApiInterface.MB_SendNotification(CallbackType.StorageReady);
+                }
+                catch(Exception)
+                {
+                    mbApiInterface.MB_SendNotification(CallbackType.StorageFailed);
+                }
             }
         }
 
-        // return an array of lyric or artwork provider names this plugin supports
-        // the providers will be iterated through one by one and passed to the RetrieveLyrics/ RetrieveArtwork function in order set by the user in the MusicBee Tags(2) preferences screen until a match is found
-        public string[] GetProviders()
+        #endregion
+
+        #region Storage Plugin API
+
+        public bool IsReady()
         {
-            return null;
+            return ampache?.IsConnected ?? false;
         }
 
-        // return lyrics for the requested artist/title from the requested provider
-        // only required if PluginType = LyricsRetrieval
-        // return null if no lyrics are found
-        public string RetrieveLyrics(string sourceFileUrl, string artist, string trackTitle, string album, bool synchronisedPreferred, string provider)
+        public Bitmap GetIcon()
         {
-            return null;
+            // TODO nav icon
+            throw new NotImplementedException();
+            // return an 16x16 icon for the main navigation node
         }
 
-        // return Base64 string representation of the artwork binary data from the requested provider
-        // only required if PluginType = ArtworkRetrieval
-        // return null if no artwork is found
-        public string RetrieveArtwork(string sourceFileUrl, string albumArtist, string album, string provider)
+        public void Refresh()
         {
-            //Return Convert.ToBase64String(artworkBinaryData)
-            return null;
+            // refresh any cached files - called when the user presses F5 or does some operation that requires a refresh of data.
         }
-   }
+
+        public string[] GetFolders(string path)
+        {
+            throw new NotImplementedException();
+            // i guess in your case you wouldnt have folders so you would just return one dummy master folder
+            // if there is a structure, depending on whether the user has clicked the main navigation node or a specific folder, MusicBee will call GetFiles(path) with the appropriate path
+        }
+
+        public bool FolderExists(string path)
+        {
+            throw new NotImplementedException();
+        }
+
+        public KeyValuePair<byte, string>[][] GetFiles(string path)
+        {
+            throw new NotImplementedException();
+            // return an array for file tag data
+            // each row on the array represents a file
+            // and a file consists of an array of tags (FilePropertyType and MetaDataType) and values
+        }
+
+        public bool FileExists(string url)
+        {
+            throw new NotImplementedException();
+        }
+
+        public KeyValuePair<byte, string>[] GetFile(string url)
+        {
+            throw new NotImplementedException();
+        }
+
+        public byte[] GetFileArtwork(string url)
+        {
+            throw new NotImplementedException();
+            // return base64 representation of bitmap data
+        }
+
+        public KeyValuePair<string, string>[] GetPlaylists()
+        {
+            throw new NotImplementedException();
+        }
+
+        public KeyValuePair<byte, string>[][] GetPlaylistFiles(string id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Stream GetStream(string url)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Exception GetError()
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        //// return an array of lyric or artwork provider names this plugin supports
+        //// the providers will be iterated through one by one and passed to the RetrieveLyrics/ RetrieveArtwork function in order set by the user in the MusicBee Tags(2) preferences screen until a match is found
+        //public string[] GetProviders()
+        //{
+        //    return null;
+        //}
+
+        //// return lyrics for the requested artist/title from the requested provider
+        //// only required if PluginType = LyricsRetrieval
+        //// return null if no lyrics are found
+        //public string RetrieveLyrics(string sourceFileUrl, string artist, string trackTitle, string album, bool synchronisedPreferred, string provider)
+        //{
+        //    return null;
+        //}
+
+        //// return Base64 string representation of the artwork binary data from the requested provider
+        //// only required if PluginType = ArtworkRetrieval
+        //// return null if no artwork is found
+        //public string RetrieveArtwork(string sourceFileUrl, string albumArtist, string album, string provider)
+        //{
+        //    //Return Convert.ToBase64String(artworkBinaryData)
+        //    return null;
+        //}
+    }
 }
