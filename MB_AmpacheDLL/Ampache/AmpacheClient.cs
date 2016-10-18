@@ -56,7 +56,9 @@ namespace MusicBeePlugin.Ampache
             return string.Join("", hash.Select(b => b.ToString("x2")));
         }
 
-        public void Connect(Action onConnected)
+        public bool IsConnected => AuthToken != null;
+
+        public void Connect()
         {
             var sha256 = SHA256.Create();
 
@@ -83,49 +85,31 @@ namespace MusicBeePlugin.Ampache
 
             var apiClient = new WebClient();
 
-            apiClient.DownloadDataCompleted += (sender, args) =>
-            {
-                var result = args.Result;
+            var result = apiClient.DownloadData(url);
 
-                Debug.Write(Encoding.UTF8.GetString(result));
+            Debug.Write(Encoding.UTF8.GetString(result));
                 
-                var serializer = new XmlSerializer(typeof(HandshakeResponse));
+            var serializer = new XmlSerializer(typeof(HandshakeResponse));
 
-                var stream = new MemoryStream(result);
-                var response = (HandshakeResponse)serializer.Deserialize(stream);
+            var stream = new MemoryStream(result);
+            var response = (HandshakeResponse)serializer.Deserialize(stream);
 
-                if (response.HasError)
-                    throw new AmpacheException(response.ErrorMessage);
+            if (response.HasError)
+                throw new AmpacheException(response.ErrorMessage);
 
-                AuthToken = response.AuthToken;
-                LastAdd = response.LastAdd;
-                LastClean = response.LastClean;
-                LastUpdate = response.LastUpdate;
-                TotalAlbums = response.TotalAlbums;
-                TotalArtists = response.TotalArtists;
-                TotalCatalogs = response.TotalCatalogs;
-                TotalPlaylists = response.TotalPlaylists;
-                TotalSongs = response.TotalSongs;
-                TotalTags = response.TotalTags;
-                TotalVideos = response.TotalVideos;
+            AuthToken = response.AuthToken;
+            LastAdd = response.LastAdd;
+            LastClean = response.LastClean;
+            LastUpdate = response.LastUpdate;
+            TotalAlbums = response.TotalAlbums;
+            TotalArtists = response.TotalArtists;
+            TotalCatalogs = response.TotalCatalogs;
+            TotalPlaylists = response.TotalPlaylists;
+            TotalSongs = response.TotalSongs;
+            TotalTags = response.TotalTags;
+            TotalVideos = response.TotalVideos;
 
-                var refreshTime = response.SessionExpiration - DateTimeOffset.Now - TimeSpan.FromMinutes(1);
-
-                cancellationSignal = new CancellationTokenSource();
-
-                refreshTokenTask = Task.Factory.StartNew(() =>
-                {
-                    cancellationSignal.Token.WaitHandle.WaitOne(refreshTime);
-
-                    cancellationSignal.Token.ThrowIfCancellationRequested();
-
-                    Ping();
-                }, cancellationSignal.Token);
-
-                onConnected();
-            };
-
-            apiClient.DownloadDataAsync(url);
+            SchedulePing(response.SessionExpiration);
         }
 
         public void Disconnect()
@@ -143,36 +127,40 @@ namespace MusicBeePlugin.Ampache
             }
         }
 
-        public void Ping()
+        private void SchedulePing(DateTimeOffset sessionExpiration)
         {
-            MakeApiCall<PingResponse>("ping", null, (response) =>
+            var refreshTime = sessionExpiration - DateTimeOffset.Now - TimeSpan.FromMinutes(1);
+
+            cancellationSignal = new CancellationTokenSource();
+
+            refreshTokenTask = Task.Factory.StartNew(() =>
             {
-                var refreshTime = response.SessionExpiration - DateTimeOffset.Now - TimeSpan.FromMinutes(1);
+                cancellationSignal.Token.WaitHandle.WaitOne(refreshTime);
 
-                cancellationSignal = new CancellationTokenSource();
+                cancellationSignal.Token.ThrowIfCancellationRequested();
 
-                refreshTokenTask = Task.Factory.StartNew(() =>
-                {
-                    cancellationSignal.Token.WaitHandle.WaitOne(refreshTime);
+                Ping();
+            }, cancellationSignal.Token);
 
-                    cancellationSignal.Token.ThrowIfCancellationRequested();
-
-                    Ping();
-                }, cancellationSignal.Token);
-            });
         }
 
-        public void UrlToSong(string songUrl, Action<Song> callback)
+        public void Ping()
         {
-            MakeApiCall<SongsResponse>("url_to_song", new Dictionary<string, string> { ["url"] = songUrl }, (response) =>
-            {
-                callback(response.Songs[0]);
-            });
+            var response = MakeApiCall<PingResponse>("ping", null);
+
+            SchedulePing(response.SessionExpiration);
+        }
+
+        public Song UrlToSong(string songUrl)
+        {
+            var response = MakeApiCall<SongsResponse>("url_to_song", new Dictionary<string, string> { ["url"] = songUrl });
+
+            return response.Songs[0];
         }
 
         #region Artists
 
-        public void GetArtists(string filter, Action<Artist[]> callback, bool filterIsExact = false, int? offset = null, int? limit = null)
+        public Artist[] GetArtists(string filter, bool filterIsExact = false, int? offset = null, int? limit = null)
         {
             var options = new Dictionary<string, string>();
 
@@ -188,43 +176,23 @@ namespace MusicBeePlugin.Ampache
             if (limit.HasValue)
                 options.Add("limit", limit.Value.ToString());
 
-            MakeApiCall<ArtistsResponse>("artists", options, (response) =>
-            {
-                callback(response.Artists);
-            });
+            var response = MakeApiCall<ArtistsResponse>("artists", options);
+
+            return response.Artists;
         }
 
-        public void GetArtist(int artistId, Action<Artist> callback)
+        public Artist GetArtist(int artistId)
         {
             var options = new Dictionary<string, string>();
 
             options.Add("filter", artistId.ToString());
 
-            MakeApiCall<ArtistsResponse>("artists", options, (response) =>
-            {
-                callback(response.Artists[0]);
-            });
+            var response = MakeApiCall<ArtistsResponse>("artists", options);
+
+            return response.Artists[0];
         }
 
-        public void GetArtistSongs(int artistId, Action<Song[]> callback, int? offset = null, int? limit = null)
-        {
-            var options = new Dictionary<string, string>();
-
-            options.Add("filter", artistId.ToString());
-
-            if (offset.HasValue)
-                options.Add("offset", offset.Value.ToString());
-
-            if (limit.HasValue)
-                options.Add("limit", limit.Value.ToString());
-
-            MakeApiCall<SongsResponse>("artist_songs", options, (response) =>
-            {
-                callback(response.Songs);
-            });
-        }
-
-        public void GetArtistAlbums(int artistId, Action<Album[]> callback, int? offset = null, int? limit = null)
+        public Song[] GetArtistSongs(int artistId, int? offset = null, int? limit = null)
         {
             var options = new Dictionary<string, string>();
 
@@ -236,17 +204,33 @@ namespace MusicBeePlugin.Ampache
             if (limit.HasValue)
                 options.Add("limit", limit.Value.ToString());
 
-            MakeApiCall<AlbumsResponse>("artist_albums", options, (response) =>
-            {
-                callback(response.Albums);
-            });
+            var response = MakeApiCall<SongsResponse>("artist_songs", options);
+
+            return response.Songs;
+        }
+
+        public Album[] GetArtistAlbums(int artistId, int? offset = null, int? limit = null)
+        {
+            var options = new Dictionary<string, string>();
+
+            options.Add("filter", artistId.ToString());
+
+            if (offset.HasValue)
+                options.Add("offset", offset.Value.ToString());
+
+            if (limit.HasValue)
+                options.Add("limit", limit.Value.ToString());
+
+            var response = MakeApiCall<AlbumsResponse>("artist_albums", options);
+
+            return response.Albums;
         }
 
         #endregion
 
         #region Albums
 
-        public void GetAlbums(string filter, Action<Album[]> callback, bool filterIsExact = false, int? offset = null, int? limit = null)
+        public Album[] GetAlbums(string filter, bool filterIsExact = false, int? offset = null, int? limit = null)
         {
             var options = new Dictionary<string, string>();
 
@@ -262,25 +246,23 @@ namespace MusicBeePlugin.Ampache
             if (limit.HasValue)
                 options.Add("limit", limit.Value.ToString());
 
-            MakeApiCall<AlbumsResponse>("albums", options, (response) =>
-            {
-                callback(response.Albums);
-            });
+            var response = MakeApiCall<AlbumsResponse>("albums", options);
+
+            return response.Albums;
         }
 
-        public void GetAlbum(int albumId, Action<Album> callback)
+        public Album GetAlbum(int albumId)
         {
             var options = new Dictionary<string, string>();
             
             options.Add("filter", albumId.ToString());
 
-            MakeApiCall<AlbumsResponse>("album", options, (response) =>
-            {
-                callback(response.Albums[0]);
-            });
+            var response = MakeApiCall<AlbumsResponse>("album", options);
+
+                return response.Albums[0];
         }
 
-        public void GetAlbumSongs(int albumId, Action<Song[]> callback, int? offset = null, int? limit = null)
+        public Song[] GetAlbumSongs(int albumId, int? offset = null, int? limit = null)
         {
             var options = new Dictionary<string, string>();
 
@@ -292,17 +274,16 @@ namespace MusicBeePlugin.Ampache
             if (limit.HasValue)
                 options.Add("limit", limit.Value.ToString());
 
-            MakeApiCall<SongsResponse>("album_songs", options, (response) =>
-            {
-                callback(response.Songs);
-            });
+            var response = MakeApiCall<SongsResponse>("album_songs", options);
+
+                return response.Songs;
         }
 
         #endregion
 
         #region Tags
 
-        public void GetTags(string filter, Action<Tag[]> callback, bool filterIsExact = false, int? offset = null, int? limit = null)
+        public Tag[] GetTags(string filter, bool filterIsExact = false, int? offset = null, int? limit = null)
         {
             var options = new Dictionary<string, string>();
 
@@ -318,43 +299,23 @@ namespace MusicBeePlugin.Ampache
             if (limit.HasValue)
                 options.Add("limit", limit.Value.ToString());
 
-            MakeApiCall<TagsResponse>("tags", options, (response) =>
-            {
-                callback(response.Tags);
-            });
+            var response = MakeApiCall<TagsResponse>("tags", options);
+
+                return response.Tags;
         }
 
-        public void GetTag(int tagId, Action<Tag> callback)
+        public Tag GetTag(int tagId)
         {
             var options = new Dictionary<string, string>();
 
             options.Add("filter", tagId.ToString());
 
-            MakeApiCall<TagsResponse>("tag", options, (response) =>
-            {
-                callback(response.Tags[0]);
-            });
+            var response = MakeApiCall<TagsResponse>("tag", options);
+
+                return response.Tags[0];
         }
 
-        public void GetTagArtists(int tagId, Action<Artist[]> callback, int? offset = null, int? limit = null)
-        {
-            var options = new Dictionary<string, string>();
-
-            options.Add("filter", tagId.ToString());
-
-            if (offset.HasValue)
-                options.Add("offset", offset.Value.ToString());
-
-            if (limit.HasValue)
-                options.Add("limit", limit.Value.ToString());
-
-            MakeApiCall<ArtistsResponse>("tag_albums", options, (response) =>
-            {
-                callback(response.Artists);
-            });
-        }
-
-        public void GetTagAlbums(int tagId, Action<Album[]> callback, int? offset = null, int? limit = null)
+        public Artist[] GetTagArtists(int tagId, int? offset = null, int? limit = null)
         {
             var options = new Dictionary<string, string>();
 
@@ -366,13 +327,12 @@ namespace MusicBeePlugin.Ampache
             if (limit.HasValue)
                 options.Add("limit", limit.Value.ToString());
 
-            MakeApiCall<AlbumsResponse>("tag_albums", options, (response) =>
-            {
-                callback(response.Albums);
-            });
+            var response = MakeApiCall<ArtistsResponse>("tag_albums", options);
+
+                return response.Artists;
         }
 
-        public void GetTagSongs(int tagId, Action<Song[]> callback, int? offset = null, int? limit = null)
+        public Album[] GetTagAlbums(int tagId, int? offset = null, int? limit = null)
         {
             var options = new Dictionary<string, string>();
 
@@ -384,17 +344,33 @@ namespace MusicBeePlugin.Ampache
             if (limit.HasValue)
                 options.Add("limit", limit.Value.ToString());
 
-            MakeApiCall<SongsResponse>("tag_songs", options, (response) =>
-            {
-                callback(response.Songs);
-            });
+            var response = MakeApiCall<AlbumsResponse>("tag_albums", options);
+
+                return response.Albums;
+        }
+
+        public Song[] GetTagSongs(int tagId, int? offset = null, int? limit = null)
+        {
+            var options = new Dictionary<string, string>();
+
+            options.Add("filter", tagId.ToString());
+
+            if (offset.HasValue)
+                options.Add("offset", offset.Value.ToString());
+
+            if (limit.HasValue)
+                options.Add("limit", limit.Value.ToString());
+
+            var response = MakeApiCall<SongsResponse>("tag_songs", options);
+
+                return response.Songs;
         }
 
         #endregion
 
         #region Songs
 
-        public void GetSongs(string filter, Action<Song[]> callback, bool filterIsExact = false, int? offset = null, int? limit = null)
+        public Song[] GetSongs(string filter, bool filterIsExact = false, int? offset = null, int? limit = null)
         {
             var options = new Dictionary<string, string>();
 
@@ -410,25 +386,23 @@ namespace MusicBeePlugin.Ampache
             if (limit.HasValue)
                 options.Add("limit", limit.Value.ToString());
 
-            MakeApiCall<SongsResponse>("songs", options, (response) =>
-            {
-                callback(response.Songs);
-            });
+            var response = MakeApiCall<SongsResponse>("songs", options);
+
+                return response.Songs;
         }
 
-        public void GetSong(int songId, Action<Song> callback)
+        public Song GetSong(int songId)
         {
             var options = new Dictionary<string, string>();
 
             options.Add("filter", songId.ToString());
 
-            MakeApiCall<SongsResponse>("song", options, (response) =>
-            {
-                callback(response.Songs[0]);
-            });
+            var response = MakeApiCall<SongsResponse>("song", options);
+
+            return response.Songs[0];
         }
 
-        public void SearchSongs(string filter, Action<Song[]> callback, int? offset = null, int? limit = null)
+        public Song[] SearchSongs(string filter, int? offset = null, int? limit = null)
         {
             if (string.IsNullOrEmpty(filter))
                 throw new ArgumentException("filter must have a value", nameof(filter));
@@ -444,17 +418,16 @@ namespace MusicBeePlugin.Ampache
             if (limit.HasValue)
                 options.Add("limit", limit.Value.ToString());
 
-            MakeApiCall<SongsResponse>("search_songs", options, (response) =>
-            {
-                callback(response.Songs);
-            });
+            var response = MakeApiCall<SongsResponse>("search_songs", options);
+
+                return response.Songs;
         }
 
         #endregion
 
         #region Playlists
 
-        public void GetPlaylists(string filter, Action<Playlist[]> callback, bool filterIsExact = false, int? offset = null, int? limit = null)
+        public Playlist[] GetPlaylists(string filter, bool filterIsExact = false, int? offset = null, int? limit = null)
         {
             var options = new Dictionary<string, string>();
 
@@ -467,25 +440,23 @@ namespace MusicBeePlugin.Ampache
             if (limit.HasValue)
                 options.Add("limit", limit.Value.ToString());
 
-            MakeApiCall<PlaylistsResponse>("playlists", options, (response) =>
-            {
-                callback(response.Playlists);
-            });
+            var response = MakeApiCall<PlaylistsResponse>("playlists", options);
+
+                return response.Playlists;
         }
 
-        public void GetPlaylist(int playlistId, Action<Playlist> callback)
+        public Playlist GetPlaylist(int playlistId)
         {
             var options = new Dictionary<string, string>();
 
             options.Add("filter", playlistId.ToString());
 
-            MakeApiCall<PlaylistsResponse>("playlist", options, (response) =>
-            {
-                callback(response.Playlists[0]);
-            });
+            var response = MakeApiCall<PlaylistsResponse>("playlist", options);
+
+                return response.Playlists[0];
         }
 
-        public void GetPlaylistSongs(int playlistId, Action<Song[]> callback, int? offset = null, int? limit = null)
+        public Song[] GetPlaylistSongs(int playlistId, int? offset = null, int? limit = null)
         {
             var options = new Dictionary<string, string>();
 
@@ -497,13 +468,12 @@ namespace MusicBeePlugin.Ampache
             if (limit.HasValue)
                 options.Add("limit", limit.Value.ToString());
 
-            MakeApiCall<SongsResponse>("playlist_songs", options, (response) =>
-            {
-                callback(response.Songs);
-            });
+            var response = MakeApiCall<SongsResponse>("playlist_songs", options);
+
+                return response.Songs;
         }
 
-        public void CreatePlaylist(string name, Action<Playlist> callback, string type = null)
+        public Playlist CreatePlaylist(string name, string type = null)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("Playlist name is required.", nameof(name));
@@ -518,10 +488,9 @@ namespace MusicBeePlugin.Ampache
             if (type != null)
                 options.Add("type", type);
 
-            MakeApiCall<PlaylistsResponse>("playlist_create", options, (response) =>
-            {
-                callback(response.Playlists[0]);
-            });
+            var response = MakeApiCall<PlaylistsResponse>("playlist_create", options);
+
+                return response.Playlists[0];
         }
 
         public void DeletePlaylist(int playlistId, Action callback)
@@ -530,10 +499,7 @@ namespace MusicBeePlugin.Ampache
 
             options.Add("filter", playlistId.ToString());
 
-            MakeApiCall<AmpacheResponse>("playlist_songs", options, (response) =>
-            {
-                callback();
-            });
+            var response = MakeApiCall<AmpacheResponse>("playlist_songs", options);
         }
 
         public void PlaylistAddSong(int playlistId, int songId, Action callback)
@@ -543,10 +509,7 @@ namespace MusicBeePlugin.Ampache
             options.Add("filter", playlistId.ToString());
             options.Add("song", songId.ToString());
 
-            MakeApiCall<AmpacheResponse>("playlist_add_song", options, (response) =>
-            {
-                callback();
-            });
+            var response = MakeApiCall<AmpacheResponse>("playlist_add_song", options);
         }
 
         public void PlaylistRemoveTrack(int playlistId, int trackNumber, Action callback)
@@ -556,17 +519,14 @@ namespace MusicBeePlugin.Ampache
             options.Add("filter", playlistId.ToString());
             options.Add("track", trackNumber.ToString());
 
-            MakeApiCall<AmpacheResponse>("playlist_remove_song", options, (response) =>
-            {
-                callback();
-            });
+            var response = MakeApiCall<AmpacheResponse>("playlist_remove_song", options);
         }
 
         #endregion
 
         #region Videos
 
-        public void GetVideos(string filter, Action<Video[]> callback, bool filterIsExact = false, int? offset = null, int? limit = null)
+        public Video[] GetVideos(string filter, bool filterIsExact = false, int? offset = null, int? limit = null)
         {
             var options = new Dictionary<string, string>();
 
@@ -579,22 +539,20 @@ namespace MusicBeePlugin.Ampache
             if (limit.HasValue)
                 options.Add("limit", limit.Value.ToString());
 
-            MakeApiCall<VideosResponse>("videos", options, (response) =>
-            {
-                callback(response.Videos);
-            });
+            var response = MakeApiCall<VideosResponse>("videos", options);
+
+                return response.Videos;
         }
 
-        public void GetVideo(int videoId, Action<Video> callback)
+        public Video GetVideo(int videoId)
         {
             var options = new Dictionary<string, string>();
 
             options.Add("filter", videoId.ToString());
 
-            MakeApiCall<VideosResponse>("playlist", options, (response) =>
-            {
-                callback(response.Videos[0]);
-            });
+            var response = MakeApiCall<VideosResponse>("playlist", options);
+
+                return response.Videos[0];
         }
 
         #endregion
@@ -609,15 +567,12 @@ namespace MusicBeePlugin.Ampache
             options.Add("id", id.ToString());
             options.Add("rating", rating.ToString());
 
-            MakeApiCall<VideosResponse>("rate", options, (response) =>
-            {
-                callback();
-            });
+            var response = MakeApiCall<VideosResponse>("rate", options);
         }
 
         #endregion
 
-        private void MakeApiCall<T>(string action, Dictionary<string, string> parameters, Action<T> callback) where T : AmpacheResponse
+        private T MakeApiCall<T>(string action, Dictionary<string, string> parameters) where T : AmpacheResponse
         {
             var urlParams = new Dictionary<string, string>
             {
@@ -633,24 +588,17 @@ namespace MusicBeePlugin.Ampache
 
             var apiClient = new WebClient();
 
-            apiClient.DownloadDataCompleted += (sender, args) =>
-            {
-                var result = args.Result;
+            var result = apiClient.DownloadData(url);
 
-                var serializer = new XmlSerializer(typeof(T));
+            var serializer = new XmlSerializer(typeof(T));
 
-                var stream = new MemoryStream(result);
-                var response = (T)serializer.Deserialize(stream);
+            var stream = new MemoryStream(result);
+            var response = (T)serializer.Deserialize(stream);
 
-                if (response.HasError)
-                    throw new AmpacheException(response.ErrorMessage);
+            if (response.HasError)
+                throw new AmpacheException(response.ErrorMessage);
 
-                callback(response);
-
-            };
-
-            apiClient.DownloadDataAsync(url);
-
+            return response;
         }
 
         private string ToApiUrl(Dictionary<string, string> dict)

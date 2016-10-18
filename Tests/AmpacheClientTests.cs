@@ -24,14 +24,7 @@ namespace Tests
         [TestMethod]
         public void Can_Do_Handshake()
         {
-            ManualResetEvent e = new ManualResetEvent(false);
-
-            ampacheClient.Connect(() =>
-            {
-                e.Set();
-            });
-
-            e.WaitOne();
+            ampacheClient.Connect();
         }
     }
 }
