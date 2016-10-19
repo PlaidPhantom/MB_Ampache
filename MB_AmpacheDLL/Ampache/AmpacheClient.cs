@@ -22,8 +22,7 @@ namespace MusicBeePlugin.Ampache
 
         private string AuthToken { get; set; }
 
-        private Task refreshTokenTask;
-        private CancellationTokenSource cancellationSignal;
+        private Timer pingTimer;
 
         public DateTimeOffset LastUpdate { get; private set; }
         public DateTimeOffset LastAdd { get; private set; }
@@ -40,6 +39,8 @@ namespace MusicBeePlugin.Ampache
 
         public AmpacheClient(string baseUrl, string username, string passwordHash)
         {
+            pingTimer = new Timer(Ping, null, Timeout.Infinite, Timeout.Infinite);
+
             AmpacheUrl = baseUrl;
             Username = username;
             PasswordHash = passwordHash;
@@ -114,37 +115,17 @@ namespace MusicBeePlugin.Ampache
 
         public void Disconnect()
         {
-            cancellationSignal.Cancel();
-
-            try
-            {
-                refreshTokenTask.Wait();
-            }
-            catch(AggregateException e)
-            {
-                if (e.InnerExceptions.Any(ex => ex.GetType() != typeof(TaskCanceledException)))
-                    throw e;
-            }
+            pingTimer.Change(Timeout.Infinite, Timeout.Infinite);
         }
 
         private void SchedulePing(DateTimeOffset sessionExpiration)
         {
             var refreshTime = sessionExpiration - DateTimeOffset.Now - TimeSpan.FromMinutes(1);
 
-            cancellationSignal = new CancellationTokenSource();
-
-            refreshTokenTask = Task.Factory.StartNew(() =>
-            {
-                cancellationSignal.Token.WaitHandle.WaitOne(refreshTime);
-
-                cancellationSignal.Token.ThrowIfCancellationRequested();
-
-                Ping();
-            }, cancellationSignal.Token);
-
+            pingTimer.Change(refreshTime, TimeSpan.FromMilliseconds(-1));
         }
 
-        public void Ping()
+        public void Ping(object state)
         {
             var response = MakeApiCall<PingResponse>("ping", null);
 
