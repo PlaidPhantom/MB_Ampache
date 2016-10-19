@@ -13,15 +13,15 @@ namespace MusicBeePlugin
         private MusicBeeApiInterface mbApiInterface;
         private PluginInfo about = new PluginInfo();
 
-        private static string DefaultServer = "ampache.example.com";
-
-        private AmpacheClient ampache;
-
+        private const string DefaultServer = "ampache.example.com";
         private const string ConfigFileName = "mb_ampache.cfg";
 
         private Settings CurrentSettings { get; set; }
-
         private SettingsControl SettingsControl { get; set; }
+
+        private AmpacheClient Ampache { get; set; }
+
+        private Exception LastException { get; set; }
 
         public Plugin()
         {
@@ -118,7 +118,7 @@ namespace MusicBeePlugin
                     }
                 }
 
-                ampache = new AmpacheClient(CurrentSettings.MakeUrl(), CurrentSettings.Username, CurrentSettings.PasswordHash);
+                Ampache = new AmpacheClient(CurrentSettings.MakeUrl(), CurrentSettings.Username, CurrentSettings.PasswordHash);
             }
         }
 
@@ -161,16 +161,16 @@ namespace MusicBeePlugin
         {
             if (CurrentSettings.Server != DefaultServer)
             {
-                ampache = new AmpacheClient(CurrentSettings.MakeUrl(), CurrentSettings.Username, CurrentSettings.PasswordHash);
+                Ampache = new AmpacheClient(CurrentSettings.MakeUrl(), CurrentSettings.Username, CurrentSettings.PasswordHash);
 
-                ampache.Connect();
+                Ampache.Connect();
             }
             else
-                ampache = null;
+                Ampache = null;
         }
         private void StopApi()
         {
-            ampache?.Disconnect();
+            Ampache?.Disconnect();
         }
 
         // MusicBee is closing the plugin (plugin is being disabled by user or MusicBee is shutting down)
@@ -218,14 +218,22 @@ namespace MusicBeePlugin
 
         public bool IsReady()
         {
-            return ampache?.IsConnected ?? false;
+            return Ampache?.IsConnected ?? false;
         }
 
         public Bitmap GetIcon()
         {
-            // TODO nav icon
-            throw new NotImplementedException();
-            // return an 16x16 icon for the main navigation node
+            try
+            {
+                // TODO nav icon
+                // return an 16x16 icon for the main navigation node
+                throw new NotImplementedException();
+            }
+            catch(Exception e)
+            {
+                LastException = e;
+                return null;
+            }
         }
 
         public void Refresh()
@@ -235,19 +243,43 @@ namespace MusicBeePlugin
 
         public string[] GetFolders(string path)
         {
-            throw new NotImplementedException();
-            // i guess in your case you wouldnt have folders so you would just return one dummy master folder
+            try
+            {
+                throw new NotImplementedException();
+            }
+            catch (Exception e)
+            {
+                LastException = e;
+                return null;
+            }
+
             // if there is a structure, depending on whether the user has clicked the main navigation node or a specific folder, MusicBee will call GetFiles(path) with the appropriate path
         }
 
         public bool FolderExists(string path)
         {
-            throw new NotImplementedException();
+            try
+            {
+                throw new NotImplementedException();
+            }
+            catch (Exception e)
+            {
+                LastException = e;
+                return false;
+            }
         }
 
         public KeyValuePair<byte, string>[][] GetFiles(string path)
         {
-            throw new NotImplementedException();
+            try
+            {
+                throw new NotImplementedException();
+            }
+            catch (Exception e)
+            {
+                LastException = e;
+                return null;
+            }
             // return an array for file tag data
             // each row on the array represents a file
             // and a file consists of an array of tags (FilePropertyType and MetaDataType) and values
@@ -255,38 +287,86 @@ namespace MusicBeePlugin
 
         public bool FileExists(string url)
         {
-            throw new NotImplementedException();
+            try
+            {
+                throw new NotImplementedException();
+            }
+            catch (Exception e)
+            {
+                LastException = e;
+                return false;
+            }
         }
 
         public KeyValuePair<byte, string>[] GetFile(string url)
         {
-            throw new NotImplementedException();
+            try
+            {
+                throw new NotImplementedException();
+            }
+            catch (Exception e)
+            {
+                LastException = e;
+                return null;
+            }
         }
 
         public byte[] GetFileArtwork(string url)
         {
-            throw new NotImplementedException();
+            try
+            {
+                throw new NotImplementedException();
+            }
+            catch (Exception e)
+            {
+                LastException = e;
+                return null;
+            }
             // return base64 representation of bitmap data
         }
 
         public KeyValuePair<string, string>[] GetPlaylists()
         {
-            throw new NotImplementedException();
+            try
+            {
+                throw new NotImplementedException();
+            }
+            catch (Exception e)
+            {
+                LastException = e;
+                return null;
+            }
         }
 
         public KeyValuePair<byte, string>[][] GetPlaylistFiles(string id)
         {
-            throw new NotImplementedException();
+            try
+            {
+                throw new NotImplementedException();
+            }
+            catch (Exception e)
+            {
+                LastException = e;
+                return null;
+            }
         }
 
         public Stream GetStream(string url)
         {
-            throw new NotImplementedException();
+            try
+            {
+                throw new NotImplementedException();
+            }
+            catch (Exception e)
+            {
+                LastException = e;
+                return null;
+            }
         }
 
         public Exception GetError()
         {
-            throw new NotImplementedException();
+            return LastException;
         }
 
         #endregion
