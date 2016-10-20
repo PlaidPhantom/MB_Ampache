@@ -5,6 +5,7 @@ using System.IO;
 using System.Xml.Serialization;
 using System.Drawing;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MusicBeePlugin
 {
@@ -245,7 +246,15 @@ namespace MusicBeePlugin
         {
             try
             {
-                throw new NotImplementedException();
+                if (path.Equals("Ampache", StringComparison.InvariantCultureIgnoreCase))
+                    return new[]
+                    {
+                        @"Ampache\Albums",
+                        @"Ampache\Artists",
+                        @"Ampache\Playlists"
+                    };
+
+                return null;
             }
             catch (Exception e)
             {
@@ -260,7 +269,12 @@ namespace MusicBeePlugin
         {
             try
             {
-                throw new NotImplementedException();
+                var rootDirs = new[] { @"Ampache", @"Ampache\Albums", @"Ampache\Artists" };
+
+                if (rootDirs.Any(d => path.Equals(d, StringComparison.InvariantCultureIgnoreCase)))
+                    return true;
+
+                return false;
             }
             catch (Exception e)
             {
@@ -273,7 +287,7 @@ namespace MusicBeePlugin
         {
             try
             {
-                throw new NotImplementedException();
+
             }
             catch (Exception e)
             {
@@ -289,7 +303,7 @@ namespace MusicBeePlugin
         {
             try
             {
-                throw new NotImplementedException();
+                return false;
             }
             catch (Exception e)
             {
@@ -329,7 +343,9 @@ namespace MusicBeePlugin
         {
             try
             {
-                throw new NotImplementedException();
+                var playlists = Ampache.GetPlaylists(null);
+
+                return playlists.Select(p => new KeyValuePair<string, string>(p.Id.ToString(), p.Name)).ToArray();
             }
             catch (Exception e)
             {
@@ -342,7 +358,9 @@ namespace MusicBeePlugin
         {
             try
             {
-                throw new NotImplementedException();
+                var songs = Ampache.GetPlaylistSongs(int.Parse(id));
+
+                return songs.Select(SongToFile).ToArray();
             }
             catch (Exception e)
             {
@@ -370,6 +388,44 @@ namespace MusicBeePlugin
         }
 
         #endregion
+
+        private KeyValuePair<byte, string>[] SongToFile(Song song)
+        {
+            var file = new Dictionary<byte, string>();
+
+            file.Add((byte)MetaDataType.TrackTitle, song.Title);
+            file.Add((byte)FilePropertyType.Url, song.Url);
+            file.Add((byte)MetaDataType.Artwork, song.ArtworkUrl);
+            file.Add((byte)MetaDataType.Artist, song.Artist.Name);
+            file.Add((byte)MetaDataType.Album, song.Album.Name);
+            file.Add((byte)MetaDataType.Composer, song.Composer);
+            file.Add((byte)MetaDataType.Comment, song.Comment);
+            file.Add((byte)MetaDataType.Publisher, song.Publisher);
+            //language
+            //tags
+            file.Add((byte)MetaDataType.TrackNo, song.Track.ToString());
+
+            file.Add((byte)FilePropertyType.Duration, song.TimeSeconds.ToString());
+
+            if (song.SampleRate != 0)
+                file.Add((byte)FilePropertyType.Size, song.SizeBytes.ToString());
+
+            if (song.Year != null)
+                file.Add((byte)MetaDataType.Year, song.Year.ToString());
+
+            if (song.BitRate != 0)
+                file.Add((byte)FilePropertyType.Bitrate, song.BitRate.ToString());
+
+            if(song.SampleRate != 0)
+            file.Add((byte)FilePropertyType.SampleRate, song.SampleRate.ToString());
+
+            if (song.Channels != null)
+                file.Add((byte)FilePropertyType.Channels, song.Channels.ToString());
+
+            file.Add((byte)MetaDataType.Rating, song.Rating.ToString());
+
+            return file.ToArray();
+        }
 
         //// return an array of lyric or artwork provider names this plugin supports
         //// the providers will be iterated through one by one and passed to the RetrieveLyrics/ RetrieveArtwork function in order set by the user in the MusicBee Tags(2) preferences screen until a match is found
